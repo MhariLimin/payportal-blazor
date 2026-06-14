@@ -3,38 +3,15 @@ param(
     [switch]$SkipDocker,
     [switch]$SkipRestore,
     [switch]$BuildOnly,
+    [switch]$ConfigureAdminSecrets,
     [ValidateSet("Debug", "Release")]
     [string]$Configuration = "Debug"
 )
 
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
+$webProject = Join-Path $root "src\PayPortal.Web\PayPortal.Web.csproj"
 Set-Location $root
-
-function Import-DotEnv {
-    param([Parameter(Mandatory)][string]$Path)
-
-    foreach ($line in Get-Content -LiteralPath $Path) {
-        $trimmed = $line.Trim()
-        if (-not $trimmed -or $trimmed.StartsWith("#")) {
-            continue
-        }
-
-        $separator = $trimmed.IndexOf("=")
-        if ($separator -lt 1) {
-            throw "Invalid .env.local entry: $line"
-        }
-
-        $name = $trimmed.Substring(0, $separator).Trim()
-        $value = $trimmed.Substring($separator + 1).Trim()
-        if (($value.StartsWith('"') -and $value.EndsWith('"')) -or
-            ($value.StartsWith("'") -and $value.EndsWith("'"))) {
-            $value = $value.Substring(1, $value.Length - 2)
-        }
-
-        [Environment]::SetEnvironmentVariable($name, $value, "Process")
-    }
-}
 
 if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) {
     $dotnetPath = "C:\Program Files\dotnet"
@@ -51,13 +28,6 @@ $sdkVersion = [Version]((dotnet --version) -replace "-.*$", "")
 if ($sdkVersion.Major -ne 8) {
     throw "PayPortal requires the .NET 8 SDK. Found $sdkVersion."
 }
-
-$envFile = Join-Path $root ".env.local"
-if (-not (Test-Path -LiteralPath $envFile)) {
-    Copy-Item -LiteralPath (Join-Path $root ".env.example") -Destination $envFile
-    Write-Host "Created .env.local from .env.example. Review its local credentials as needed." -ForegroundColor Yellow
-}
-Import-DotEnv -Path $envFile
 
 if (-not $SkipDocker) {
     if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
@@ -101,6 +71,27 @@ if (-not $SkipRestore) {
     dotnet restore PayPortal.sln --configfile NuGet.Config
 }
 
+if (-not $BuildOnly) {
+    $secrets = dotnet user-secrets list --project $webProject
+    $hasEmail = $secrets -match "^SeedAdmin:Email\s*="
+    $hasPassword = $secrets -match "^SeedAdmin:Password\s*="
+
+    if ($ConfigureAdminSecrets -or -not ($hasEmail -and $hasPassword)) {
+        Write-Host "Configure the local seeded administrator." -ForegroundColor Cyan
+        $email = Read-Host "Admin email"
+        $securePassword = Read-Host "Admin password" -AsSecureString
+        $password = [System.Net.NetworkCredential]::new("", $securePassword).Password
+
+        if ([string]::IsNullOrWhiteSpace($email) -or [string]::IsNullOrWhiteSpace($password)) {
+            throw "Admin email and password are required."
+        }
+
+        dotnet user-secrets set "SeedAdmin:Email" $email --project $webProject
+        dotnet user-secrets set "SeedAdmin:Password" $password --project $webProject
+        $password = $null
+    }
+}
+
 dotnet build PayPortal.sln --no-restore --configuration $Configuration
 
 if ($BuildOnly) {
@@ -108,6 +99,6 @@ if ($BuildOnly) {
     exit 0
 }
 
-Write-Host "Starting PayPortal at $env:ASPNETCORE_URLS" -ForegroundColor Green
+Write-Host "Starting PayPortal at http://localhost:5088" -ForegroundColor Green
 Write-Host "Press Ctrl+C to stop the web application." -ForegroundColor DarkGray
-dotnet run --project src/PayPortal.Web --no-build --configuration $Configuration
+dotnet run --project $webProject --no-build --configuration $Configuration

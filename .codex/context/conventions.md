@@ -2,7 +2,7 @@
 
 ## Commands
 
-- `.\scripts\run-local.ps1`: load `.env.local`, start MySQL, build, and run.
+- `.\scripts\run-local.ps1`: configure User Secrets, start MySQL, build, and run.
 - `dotnet restore PayPortal.sln`
 - `dotnet build PayPortal.sln --no-restore`
 - `dotnet test PayPortal.sln --no-build`

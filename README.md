@@ -22,17 +22,15 @@ tracking, and secure API credential issuance.
 ## Run
 
 1. Install the .NET 8 SDK and Docker Desktop.
-2. Copy the local configuration template.
-3. Run the launcher:
+2. Run the launcher:
 
 ```powershell
-Copy-Item .env.example .env.local
 .\scripts\run-local.ps1
 ```
 
-ASP.NET Core does not load `.env.local` itself; the launcher imports it as
-process environment variables. See [setup](docs/setup.md) for details and
-manual commands.
+On first run, the launcher prompts for local administrator credentials and
+stores them with .NET User Secrets. Local non-secret settings use
+`appsettings.Development.json`. See [setup](docs/setup.md).
 
 ## Verification
 

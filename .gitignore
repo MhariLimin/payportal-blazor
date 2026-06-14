@@ -32,7 +32,6 @@ obj/
 *.user
 *.userosscache
 *.sln.docstates
-appsettings.Development.json
 uploads/
 .dotnet-home/
 .nuget/

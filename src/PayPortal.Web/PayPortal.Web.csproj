@@ -1,4 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <UserSecretsId>PayPortal-Local-Development</UserSecretsId>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\PayPortal.Application\PayPortal.Application.csproj" />
     <ProjectReference Include="..\PayPortal.Infrastructure\PayPortal.Infrastructure.csproj" />

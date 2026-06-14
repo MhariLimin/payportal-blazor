@@ -1,36 +1,37 @@
 # Local Setup
 
-## Configuration Choice
+## Configuration Model
 
-ASP.NET Core does not natively load `.env` or `.env.local`. Its standard local
-configuration mechanisms are environment variables, user secrets, and
-`appsettings.Development.json`.
+PayPortal follows ASP.NET Core's native layered configuration model.
 
-PayPortal supports `.env.local` through `scripts/run-local.ps1`. The script
-loads the file into process environment variables before starting the app. This
-keeps local credentials out of Git and avoids adding a dotenv dependency to the
-application runtime.
+1. `appsettings.json` provides shared defaults.
+2. `appsettings.Development.json` provides local, non-secret development values
+   such as the Docker MySQL connection.
+3. .NET User Secrets hold developer-specific administrator credentials.
+4. Environment variables or a managed secret store override settings in hosted
+   environments.
+5. Command-line arguments have the highest normal precedence.
 
-Copy the tracked template:
+This avoids a dotenv parser and matches common C# and ASP.NET Core development
+workflows.
 
-```powershell
-Copy-Item .env.example .env.local
-```
+## Why User Secrets
 
-Configuration names use ASP.NET Core's double-underscore mapping:
+The Web project declares a `UserSecretsId`. When ASP.NET Core runs in the
+Development environment, `WebApplication.CreateBuilder` automatically loads
+the associated secrets from the current user's profile.
 
-```text
-SeedAdmin__Email -> SeedAdmin:Email
-SeedAdmin__Password -> SeedAdmin:Password
-ConnectionStrings__PayPortal -> ConnectionStrings:PayPortal
-```
+User Secrets:
+
+- Are outside the repository.
+- Are not committed to Git.
+- Are loaded through the standard ASP.NET Core configuration pipeline.
+- Are appropriate for development, not encrypted production storage.
 
 ## Prerequisites
 
 - .NET 8 SDK
 - Docker Desktop or an existing MySQL 8 server
-
-After installing .NET, open a new PowerShell window and verify:
 
 ```powershell
 dotnet --version
@@ -43,29 +44,34 @@ docker version
 .\scripts\run-local.ps1
 ```
 
-The launcher validates .NET, creates `.env.local` from `.env.example` when
-missing, starts and waits for MySQL, restores dependencies, builds, and runs the
-web project.
+On first run, the launcher prompts for administrator credentials and stores
+them through `dotnet user-secrets`. It then starts and waits for MySQL, restores
+packages and tools, builds the solution, and starts the Blazor application at
+`http://localhost:5088`.
 
-For repeat runs:
+Useful options:
 
 ```powershell
 .\scripts\run-local.ps1 -SkipRestore
-```
-
-For an existing non-Docker MySQL server:
-
-```powershell
 .\scripts\run-local.ps1 -SkipDocker
-```
-
-Build without starting the web host:
-
-```powershell
+.\scripts\run-local.ps1 -ConfigureAdminSecrets
 .\scripts\run-local.ps1 -SkipDocker -SkipRestore -BuildOnly -Configuration Release
 ```
 
-## Manual Commands
+Seed secrets are used when creating an administrator in an empty database.
+Changing the secrets does not mutate an administrator already stored in MySQL.
+Use the password-reset workflow or reset the local database for a new seed
+identity.
+
+## Manual User Secret Commands
+
+```powershell
+dotnet user-secrets list --project src/PayPortal.Web
+dotnet user-secrets set "SeedAdmin:Email" "admin@payportal.local" --project src/PayPortal.Web
+dotnet user-secrets set "SeedAdmin:Password" "ChangeThis123!" --project src/PayPortal.Web
+```
+
+## Manual Build and Run
 
 ```powershell
 docker compose up -d mysql
@@ -75,8 +81,20 @@ dotnet build PayPortal.sln --no-restore
 dotnet run --project src/PayPortal.Web --no-build
 ```
 
-When running manually, PowerShell does not automatically load `.env.local`.
-Either set the `$env:` values for that terminal session or use the launcher.
+`launchSettings.json` sets `ASPNETCORE_ENVIRONMENT=Development` and binds the
+local application to `http://localhost:5088`.
+
+## Configuration Precedence
+
+If the same key exists in multiple sources, the later, higher-priority source
+wins. For example, a deployment environment variable named
+`ConnectionStrings__PayPortal` overrides both appsettings files.
+
+The double underscore represents a nested configuration separator:
+
+```text
+ConnectionStrings__PayPortal -> ConnectionStrings:PayPortal
+```
 
 ## Code First Migrations
 
@@ -86,21 +104,10 @@ dotnet ef migrations add <MigrationName> --project src/PayPortal.Infrastructure 
 dotnet ef database update --project src/PayPortal.Infrastructure --startup-project src/PayPortal.Web
 ```
 
-## Stop and Reset
+## Production Guidance
 
-```powershell
-docker compose stop mysql
-```
-
-To delete the local database volume:
-
-```powershell
-docker compose down -v
-```
-
-## Production Changes
-
-- Use a secret manager instead of `.env.local`.
-- Use a TLS-enabled MySQL connection.
-- Configure email delivery, object storage, malware scanning, backups, MFA,
-  observability, CI, and deployment.
+- Do not use User Secrets as a production secret store.
+- Use environment variables, Azure Key Vault, AWS Secrets Manager, HashiCorp
+  Vault, or the deployment platform's managed secrets.
+- Use TLS for MySQL and configure production email, storage, scanning, backup,
+  MFA, logging, and monitoring.
