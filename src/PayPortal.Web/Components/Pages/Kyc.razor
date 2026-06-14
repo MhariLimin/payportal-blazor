@@ -1,0 +1,211 @@
+@page "/kyc"
+@page "/merchants/{MerchantId:guid}/kyc"
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = PortalRoles.MerchantOrAdmin)]
+@inject IMerchantService MerchantService
+@inject IKycService KycService
+
+<PageTitle>KYC verification - PayPortal</PageTitle>
+
+@if (merchant is null)
+{
+    <section class="card">Loading KYC workflow...</section>
+}
+else
+{
+    <div class="page">
+        <header class="page-header">
+            <div>
+                <h1>KYC Verification</h1>
+                <p>@merchant.CompanyName · Document verification status</p>
+            </div>
+            <button class="button primary" @onclick="() => showUpload = true">Upload Document</button>
+        </header>
+
+        <section class="grid stats">
+            <article class="card">
+                <h2>Verification Progress</h2>
+                <div class="stat-value">@Progress%</div>
+                <div class="progress"><span style="width: @Progress%"></span></div>
+            </article>
+            <article class="card"><div class="stat-value">@merchant.KycDocuments.Count(x => x.Status == DocumentStatus.Verified)</div><div class="stat-label">Verified documents</div></article>
+            <article class="card"><div class="stat-value">@merchant.KycDocuments.Count(x => x.Status == DocumentStatus.Pending)</div><div class="stat-label">Pending review</div></article>
+            <article class="card"><div class="stat-value">@merchant.KycDocuments.Count</div><div class="stat-label">Total uploads</div></article>
+        </section>
+
+        @if (!string.IsNullOrWhiteSpace(message))
+        {
+            <div class="alert @(uploadSucceeded ? "success" : "error")">@message</div>
+        }
+
+        <section class="grid three kyc-columns">
+            <article class="card">
+                <h2>Verification Milestones</h2>
+                <div class="timeline">
+                    @foreach (var milestone in merchant.KycMilestones.OrderBy(x => x.CreatedAtUtc))
+                    {
+                        <div class="timeline-item">
+                            <span class="timeline-dot @(milestone.IsCompleted ? "complete" : "")"></span>
+                            <div>
+                                <strong>@milestone.Title</strong>
+                                <p class="muted">@milestone.Description</p>
+                                @if (milestone.CompletedAtUtc.HasValue)
+                                {
+                                    <small>Completed @milestone.CompletedAtUtc.Value.ToLocalTime().ToString("MMM d, yyyy")</small>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </article>
+
+            <article class="card flush span-content">
+                <div class="card-title"><h2>Uploaded Documents</h2><span class="muted">@merchant.KycDocuments.Count files</span></div>
+                <div class="list">
+                    @if (merchant.KycDocuments.Count == 0)
+                    {
+                        <div class="empty-state">
+                            <h3>No documents uploaded</h3>
+                            <p class="muted">Upload the required evidence to begin verification.</p>
+                        </div>
+                    }
+                    @foreach (var document in merchant.KycDocuments.OrderByDescending(x => x.CreatedAtUtc))
+                    {
+                        <div class="document-row">
+                            <span class="company-icon">▤</span>
+                            <span class="list-row-main">
+                                <h3>@document.DocumentName</h3>
+                                <p>@document.DocumentType.Replace('_', ' ') · @FormatBytes(document.FileSize) · @document.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy")</p>
+                                @if (!string.IsNullOrWhiteSpace(document.ReviewerNotes))
+                                {
+                                    <div class="review-note"><strong>Reviewer note:</strong> @document.ReviewerNotes</div>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(document.RejectionReason))
+                                {
+                                    <div class="alert error"><strong>Rejected:</strong> @document.RejectionReason</div>
+                                }
+                            </span>
+                            <StatusBadge Value="document.Status" />
+                        </div>
+                    }
+                </div>
+            </article>
+        </section>
+
+        <section class="card">
+            <h2>Document Requirements</h2>
+            <div class="grid three requirements">
+                @foreach (var requirement in Requirements)
+                {
+                    var document = merchant.KycDocuments.FirstOrDefault(x => x.DocumentType == requirement.Type);
+                    <div class="requirement">
+                        <span>@(document?.Status == DocumentStatus.Verified ? "✓" : document is null ? "!" : "◷")</span>
+                        <div><strong>@requirement.Label</strong><p class="muted">@(requirement.Required ? "Required" : "Optional")</p></div>
+                    </div>
+                }
+            </div>
+        </section>
+    </div>
+
+    @if (showUpload)
+    {
+        <div class="modal-backdrop">
+            <section class="modal">
+                <div class="card-title"><h2>Upload Document</h2><button class="icon-button" @onclick="CloseUpload">Close</button></div>
+                <div class="modal-body">
+                    <label>Document type</label>
+                    <select class="input" @bind="documentType">
+                        @foreach (var requirement in Requirements)
+                        {
+                            <option value="@requirement.Type">@requirement.Label</option>
+                        }
+                    </select>
+                    <label>File</label>
+                    <InputFile OnChange="SelectFile" accept=".pdf,.png,.jpg,.jpeg" />
+                    <p class="muted">PDF, PNG, or JPEG up to 10 MB.</p>
+                    @if (selectedFile is not null)
+                    {
+                        <div class="selected-file">@selectedFile.Name · @FormatBytes(selectedFile.Size)</div>
+                    }
+                </div>
+                <div class="modal-actions">
+                    <button class="button secondary" @onclick="CloseUpload">Cancel</button>
+                    <button class="button primary" disabled="@(selectedFile is null || uploading)" @onclick="UploadAsync">@(uploading ? "Uploading..." : "Upload Document")</button>
+                </div>
+            </section>
+        </div>
+    }
+}
+
+@code {
+    [Parameter] public Guid? MerchantId { get; set; }
+    private Merchant? merchant;
+    private bool showUpload;
+    private bool uploading;
+    private bool uploadSucceeded;
+    private string? message;
+    private IBrowserFile? selectedFile;
+    private string documentType = "business_registration";
+    private readonly (string Type, string Label, bool Required)[] Requirements =
+    [
+        ("business_registration", "Certificate of Incorporation", true),
+        ("tax_certificate", "Tax Registration Certificate", true),
+        ("id_document", "Director ID Document", true),
+        ("bank_statement", "Bank Statement", false),
+        ("financial_statement", "Financial Statement", false)
+    ];
+
+    private int Progress => merchant!.KycMilestones.Count == 0
+        ? 0
+        : merchant.KycMilestones.Count(x => x.IsCompleted) * 100 / merchant.KycMilestones.Count;
+
+    protected override async Task OnParametersSetAsync() =>
+        merchant = await MerchantService.GetAccessibleAsync(MerchantId);
+
+    private void SelectFile(InputFileChangeEventArgs args) => selectedFile = args.File;
+
+    private async Task UploadAsync()
+    {
+        if (selectedFile is null || merchant is null)
+        {
+            return;
+        }
+
+        uploading = true;
+        message = null;
+        try
+        {
+            await using var stream = selectedFile.OpenReadStream(10 * 1024 * 1024);
+            await KycService.UploadAsync(
+                merchant.Id,
+                documentType,
+                selectedFile.Name,
+                selectedFile.ContentType,
+                selectedFile.Size,
+                stream);
+            uploadSucceeded = true;
+            message = "Document uploaded and queued for review.";
+            showUpload = false;
+            selectedFile = null;
+            merchant = await MerchantService.GetAccessibleAsync(MerchantId);
+        }
+        catch (Exception exception) when (exception is IOException or InvalidOperationException)
+        {
+            uploadSucceeded = false;
+            message = exception.Message;
+        }
+        finally
+        {
+            uploading = false;
+        }
+    }
+
+    private void CloseUpload()
+    {
+        showUpload = false;
+        selectedFile = null;
+    }
+
+    private static string FormatBytes(long bytes) =>
+        bytes >= 1024 * 1024 ? $"{bytes / 1024d / 1024d:F1} MB" : $"{bytes / 1024d:F1} KB";
+}
