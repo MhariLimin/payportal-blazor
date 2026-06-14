@@ -1,0 +1,7 @@
+<span class="badge @CssClass">@Text</span>
+
+@code {
+    [Parameter, EditorRequired] public object Value { get; set; } = default!;
+    private string Text => Value.ToString()?.Replace("UnderReview", "Under Review") ?? "";
+    private string CssClass => Value.ToString()?.ToLowerInvariant() ?? "";
+}

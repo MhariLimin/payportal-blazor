@@ -1,0 +1,105 @@
+@page "/"
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = PortalRoles.MerchantOrAdmin)]
+@inject IMerchantService MerchantService
+
+<PageTitle>Dashboard - PayPortal</PageTitle>
+
+@if (model is null)
+{
+    <section class="card">Loading dashboard...</section>
+}
+else
+{
+    <div class="page">
+        <header class="page-header">
+            <div><h1>Dashboard</h1><p>Merchant onboarding overview</p></div>
+            <span class="muted">Updated @DateTime.Now.ToString("MMM d, yyyy")</span>
+        </header>
+
+        <section class="grid stats">
+            @foreach (var stat in Stats())
+            {
+                <article class="card">
+                    <span class="stat-icon">@stat.Icon</span>
+                    <div class="stat-value">@stat.Value</div>
+                    <div class="stat-label">@stat.Label</div>
+                </article>
+            }
+        </section>
+
+        <section class="grid three">
+            <article class="card">
+                <h2>Approval Rate</h2>
+                <div class="stat-value">@model.ApprovalRate%</div>
+                <div class="progress"><span style="width: @model.ApprovalRate%"></span></div>
+                <p class="muted">@model.Approved approved of @(model.Approved + model.Rejected) decisions</p>
+            </article>
+            <article class="card">
+                <h2>Approval Funnel</h2>
+                <div class="stat-value">@model.PendingApplications → @model.UnderReview → @model.Approved</div>
+                <p class="muted">Pending to review to approval</p>
+            </article>
+            <article class="card">
+                <h2>High Risk Merchants</h2>
+                <div class="stat-value">@model.HighRisk</div>
+                <p class="muted">Requires enhanced due diligence</p>
+            </article>
+        </section>
+
+        <section class="grid two">
+            <article class="card flush">
+                <div class="card-title"><h2>Pending Approvals</h2><span class="muted">@model.Pending.Count applications</span></div>
+                <div class="list">
+                    @if (model.Pending.Count == 0)
+                    {
+                        <div class="empty-state muted">No pending approvals.</div>
+                    }
+                    @foreach (var merchant in model.Pending)
+                    {
+                        <a class="list-row" href="/merchants/@merchant.Id">
+                            <span class="company-icon">▣</span>
+                            <span class="list-row-main">
+                                <h3>@merchant.CompanyName</h3>
+                                <p>@merchant.Industry · @merchant.BusinessType</p>
+                            </span>
+                            <StatusBadge Value="merchant.Status" />
+                        </a>
+                    }
+                </div>
+            </article>
+            <article class="card flush">
+                <div class="card-title"><h2>Recent Activity</h2></div>
+                <div class="list">
+                    @if (model.RecentActivity.Count == 0)
+                    {
+                        <div class="empty-state muted">Activity appears here as work is completed.</div>
+                    }
+                    @foreach (var activity in model.RecentActivity)
+                    {
+                        <div class="list-row">
+                            <span class="timeline-dot complete"></span>
+                            <span class="list-row-main">
+                                <h3>@activity.Action.Replace('_', ' ')</h3>
+                                <p>@activity.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy h:mm tt")</p>
+                            </span>
+                        </div>
+                    }
+                </div>
+            </article>
+        </section>
+    </div>
+}
+
+@code {
+    private DashboardModel? model;
+    protected override async Task OnInitializedAsync() => model = await MerchantService.GetDashboardAsync();
+
+    private IEnumerable<(string Label, int Value, string Icon)> Stats()
+    {
+        yield return ("Total Merchants", model!.TotalMerchants, "▣");
+        yield return ("Pending", model.PendingApplications, "◷");
+        yield return ("Under Review", model.UnderReview, "◉");
+        yield return ("Approved", model.Approved, "✓");
+    }
+}
