@@ -32,3 +32,10 @@ public interface IReviewService
 {
     Task ReviewAsync(Guid merchantId, ReviewRequest request, CancellationToken cancellationToken = default);
 }
+
+public interface IRegistrationService
+{
+    Task<(bool Succeeded, IReadOnlyList<string> Errors)> RegisterMerchantAsync(
+        MerchantRegistrationModel model,
+        CancellationToken cancellationToken = default);
+}
