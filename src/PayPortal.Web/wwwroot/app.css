@@ -112,6 +112,14 @@ label { display: block; margin: 14px 0 6px; color: #334155; font-size: 14px; fon
 .details-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
 .detail dt { color: #64748b; font-size: 12px; font-weight: 700; text-transform: uppercase; }
 .detail dd { margin: 5px 0 0; font-weight: 600; }
+.profile-hero { overflow: hidden; background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; }
+.profile-banner { height: 128px; background: linear-gradient(90deg, #06b6d4, #14b8a6, #10b981); }
+.profile-summary { display: flex; align-items: center; gap: 14px; padding: 0 24px 24px; }
+.profile-summary h1, .profile-summary p { margin: 0; }
+.profile-summary p { margin-top: 4px; color: #64748b; }
+.profile-logo { display: grid; place-items: center; width: 88px; height: 88px; margin-top: -42px; border: 5px solid #fff; border-radius: 18px; background: #f1f5f9; font-size: 34px; }
+.address-block { display: grid; gap: 4px; padding: 15px; color: #475569; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; }
+.detail-list { display: grid; gap: 16px; }
 
 @media (max-width: 900px) {
     .sidebar { display: none; }

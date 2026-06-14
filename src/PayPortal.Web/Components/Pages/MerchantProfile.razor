@@ -1,0 +1,150 @@
+@page "/merchant/profile"
+@page "/merchants/{MerchantId:guid}"
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = PortalRoles.MerchantOrAdmin)]
+@inject IMerchantService MerchantService
+
+<PageTitle>Merchant profile - PayPortal</PageTitle>
+
+@if (loading)
+{
+    <section class="card">Loading merchant profile...</section>
+}
+else if (merchant is null)
+{
+    <section class="card empty-state">
+        <h1>Merchant profile unavailable</h1>
+        <p class="muted">The selected application does not exist or is not accessible.</p>
+    </section>
+}
+else
+{
+    <div class="page">
+        <section class="profile-hero">
+            <div class="profile-banner"></div>
+            <div class="profile-summary">
+                <span class="profile-logo">▣</span>
+                <div>
+                    <h1>@merchant.CompanyName</h1>
+                    <p>@(merchant.TradingName ?? merchant.BusinessType)</p>
+                </div>
+                <StatusBadge Value="merchant.Status" />
+                <StatusBadge Value="merchant.RiskLevel" />
+            </div>
+        </section>
+
+        <section class="grid two profile-columns">
+            <div class="grid">
+                <article class="card">
+                    <h2>Company Information</h2>
+                    <dl class="details-grid">
+                        @Detail("Business Type", merchant.BusinessType)
+                        @Detail("Industry", merchant.Industry)
+                        @Detail("Registration Number", merchant.RegistrationNumber)
+                        @Detail("Tax ID", merchant.TaxId)
+                        @Detail("Founded Year", merchant.FoundedYear?.ToString())
+                        @Detail("Employees", merchant.EmployeeCount?.ToString())
+                        @Detail("Annual Revenue", merchant.AnnualRevenueRange)
+                        @Detail("Website", merchant.Website)
+                    </dl>
+                    @if (!string.IsNullOrWhiteSpace(merchant.Description))
+                    {
+                        <p class="muted">@merchant.Description</p>
+                    }
+                </article>
+
+                <article class="card flush">
+                    <div class="card-title"><h2>Contact Information</h2></div>
+                    <div class="list">
+                        @foreach (var contact in merchant.Contacts.OrderByDescending(x => x.IsPrimary))
+                        {
+                            <div class="list-row">
+                                <span class="avatar">@contact.Name.FirstOrDefault()</span>
+                                <span class="list-row-main">
+                                    <h3>@contact.Name @if (contact.IsPrimary) { <span class="badge approved">Primary</span> }</h3>
+                                    <p>@contact.Position · <a href="mailto:@contact.Email">@contact.Email</a> · @contact.Phone</p>
+                                </span>
+                            </div>
+                        }
+                    </div>
+                </article>
+
+                <article class="card">
+                    <h2>Address Information</h2>
+                    <div class="grid two">
+                        @foreach (var address in merchant.Addresses)
+                        {
+                            <div class="address-block">
+                                <strong>@address.AddressType address</strong>
+                                <span>@address.StreetAddress</span>
+                                <span>@address.City, @address.State @address.PostalCode</span>
+                                <span>@address.Country</span>
+                            </div>
+                        }
+                    </div>
+                </article>
+            </div>
+
+            <aside class="grid">
+                <article class="card">
+                    <h2>Application Details</h2>
+                    <dl class="detail-list">
+                        @Detail("Application Date", merchant.CreatedAtUtc.ToLocalTime().ToString("MMMM d, yyyy"))
+                        @Detail("Last Updated", merchant.UpdatedAtUtc.ToLocalTime().ToString("MMMM d, yyyy"))
+                        @Detail("Risk Level", merchant.RiskLevel.ToString())
+                        @Detail("Status", merchant.Status.ToString().Replace("UnderReview", "Under Review"))
+                    </dl>
+                </article>
+                <article class="card">
+                    <h2>Onboarding Progress</h2>
+                    @{
+                        var completed = merchant.KycMilestones.Count(x => x.IsCompleted);
+                        var total = merchant.KycMilestones.Count;
+                        var percent = total == 0 ? 0 : completed * 100 / total;
+                    }
+                    <div class="stat-value">@percent%</div>
+                    <div class="progress"><span style="width: @percent%"></span></div>
+                    <p class="muted">@completed of @total milestones complete</p>
+                </article>
+                <article class="card">
+                    <h2>Quick Actions</h2>
+                    <div class="grid">
+                        <a class="button primary" href="@KycUrl()">Review KYC documents</a>
+                        @if (merchant.Status == MerchantStatus.Approved)
+                        {
+                            <a class="button secondary" href="/api-credentials">Manage API credentials</a>
+                        }
+                    </div>
+                </article>
+            </aside>
+        </section>
+    </div>
+}
+
+@code {
+    [Parameter] public Guid? MerchantId { get; set; }
+    private Merchant? merchant;
+    private bool loading = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        loading = true;
+        merchant = await MerchantService.GetAccessibleAsync(MerchantId);
+        loading = false;
+    }
+
+    private string KycUrl() => MerchantId.HasValue ? $"/merchants/{MerchantId}/kyc" : "/kyc";
+
+    private static RenderFragment Detail(string label, string? value) => builder =>
+    {
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "detail");
+        builder.OpenElement(2, "dt");
+        builder.AddContent(3, label);
+        builder.CloseElement();
+        builder.OpenElement(4, "dd");
+        builder.AddContent(5, string.IsNullOrWhiteSpace(value) ? "Not provided" : value);
+        builder.CloseElement();
+        builder.CloseElement();
+    };
+}
