@@ -141,6 +141,23 @@ label { display: block; margin: 14px 0 6px; color: #334155; font-size: 14px; fon
 .credential-heading h3, .credential-heading p { margin: 0; }
 .credential-heading p { margin-top: 3px; color: #64748b; font-size: 12px; }
 .permission-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.application-row { display: flex; align-items: center; gap: 14px; padding: 17px 20px; border-top: 1px solid #f1f5f9; }
+.application-row:first-child { border-top: 0; }
+.application-row h3, .application-row p { margin: 0; }
+.application-row p { margin-top: 4px; color: #64748b; font-size: 13px; }
+.review-modal { width: min(100%, 850px); max-height: 92vh; }
+.review-body { max-height: 68vh; overflow-y: auto; }
+.review-stat { display: grid; gap: 4px; padding: 14px; background: #f8fafc; border-radius: 9px; }
+.review-stat span { color: #64748b; font-size: 12px; text-transform: uppercase; }
+.bordered { border: 1px solid #e2e8f0; border-radius: 10px; }
+.review-history { display: grid; grid-template-columns: 1fr auto; gap: 5px; padding: 13px; border: 1px solid #e2e8f0; border-radius: 9px; }
+.review-history span { color: #64748b; font-size: 12px; }
+.review-history p { grid-column: span 2; margin: 4px 0 0; color: #475569; }
+.decision-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.decision { min-height: 70px; padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; background: #fff; cursor: pointer; font-weight: 700; }
+.decision.approved.selected { color: #047857; border-color: #10b981; background: #ecfdf5; }
+.decision.rejected.selected { color: #b91c1c; border-color: #ef4444; background: #fef2f2; }
+.decision.pending.selected { color: #b45309; border-color: #f59e0b; background: #fffbeb; }
 
 @media (max-width: 900px) {
     .sidebar { display: none; }

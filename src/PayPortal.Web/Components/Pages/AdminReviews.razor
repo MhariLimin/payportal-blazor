@@ -1,0 +1,172 @@
+@page "/admin/reviews"
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = PortalRoles.Admin)]
+@inject IMerchantService MerchantService
+@inject IReviewService ReviewService
+
+<PageTitle>Admin review - PayPortal</PageTitle>
+
+<div class="page">
+    <header class="page-header">
+        <div><h1>Admin Review</h1><p>Review pending merchant applications and record decisions</p></div>
+        <span class="muted">@Pending.Count awaiting action</span>
+    </header>
+
+    @if (!string.IsNullOrWhiteSpace(message))
+    {
+        <div class="alert @(success ? "success" : "error")">@message</div>
+    }
+
+    <section class="card flush">
+        <div class="list">
+            @if (Pending.Count == 0)
+            {
+                <div class="empty-state"><h2>No pending applications</h2><p class="muted">All applications have been processed.</p></div>
+            }
+            @foreach (var merchant in Pending)
+            {
+                <div class="application-row">
+                    <span class="company-icon">▣</span>
+                    <span class="list-row-main">
+                        <h3>@merchant.CompanyName</h3>
+                        <p>@merchant.Industry · @merchant.BusinessType · @merchant.KycDocuments.Count documents</p>
+                    </span>
+                    <StatusBadge Value="merchant.RiskLevel" />
+                    <StatusBadge Value="merchant.Status" />
+                    <button class="button primary" @onclick="() => Select(merchant)">Review</button>
+                </div>
+            }
+        </div>
+    </section>
+</div>
+
+@if (selected is not null)
+{
+    <div class="modal-backdrop">
+        <section class="modal review-modal">
+            <div class="card-title">
+                <div><h2>Review Application</h2><span class="muted">@selected.CompanyName</span></div>
+                <button class="icon-button" @onclick="Close">Close</button>
+            </div>
+            <div class="modal-body review-body">
+                <section class="grid three">
+                    <div class="review-stat"><span>Risk</span><strong>@selected.RiskLevel</strong></div>
+                    <div class="review-stat"><span>Status</span><strong>@selected.Status.ToString().Replace("UnderReview", "Under Review")</strong></div>
+                    <div class="review-stat"><span>Applied</span><strong>@selected.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy")</strong></div>
+                </section>
+
+                <h3>Primary Contact</h3>
+                @if (selected.Contacts.FirstOrDefault() is { } contact)
+                {
+                    <div class="address-block"><strong>@contact.Name</strong><span>@contact.Position</span><span>@contact.Email · @contact.Phone</span></div>
+                }
+
+                <h3>Documents</h3>
+                <div class="list bordered">
+                    @if (selected.KycDocuments.Count == 0)
+                    {
+                        <div class="list-row muted">No documents uploaded.</div>
+                    }
+                    @foreach (var document in selected.KycDocuments)
+                    {
+                        <div class="list-row">
+                            <span class="company-icon">▤</span>
+                            <span class="list-row-main"><h3>@document.DocumentName</h3><p>@document.DocumentType.Replace('_', ' ')</p></span>
+                            <StatusBadge Value="document.Status" />
+                        </div>
+                    }
+                </div>
+
+                @if (selected.Reviews.Count > 0)
+                {
+                    <h3>Review History</h3>
+                    @foreach (var review in selected.Reviews.OrderByDescending(x => x.CreatedAtUtc))
+                    {
+                        <div class="review-history">
+                            <strong>@review.Decision.ToString().Replace("MoreInformationRequired", "More Information Required")</strong>
+                            <span>@review.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy h:mm tt")</span>
+                            <p>@review.Notes</p>
+                        </div>
+                    }
+                }
+
+                <h3>Decision</h3>
+                <div class="decision-grid">
+                    <button class="decision approved @(decision == ReviewDecision.Approved ? "selected" : "")" @onclick="() => decision = ReviewDecision.Approved">✓ Approve</button>
+                    <button class="decision rejected @(decision == ReviewDecision.Rejected ? "selected" : "")" @onclick="() => decision = ReviewDecision.Rejected">× Reject</button>
+                    <button class="decision pending @(decision == ReviewDecision.MoreInformationRequired ? "selected" : "")" @onclick="() => decision = ReviewDecision.MoreInformationRequired">! Request Documents</button>
+                </div>
+                <label>Reviewer notes</label>
+                <textarea class="input" rows="4" @bind="notes" placeholder="Explain the decision or documents required..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="button secondary" @onclick="Close">Cancel</button>
+                <button class="button primary" disabled="@submitting" @onclick="SubmitAsync">@(submitting ? "Submitting..." : "Submit Decision")</button>
+            </div>
+        </section>
+    </div>
+}
+
+@code {
+    [SupplyParameterFromQuery] public Guid? MerchantId { get; set; }
+    private IReadOnlyList<Merchant> merchants = [];
+    private Merchant? selected;
+    private ReviewDecision decision = ReviewDecision.MoreInformationRequired;
+    private string notes = "";
+    private string? message;
+    private bool success;
+    private bool submitting;
+    private IReadOnlyList<Merchant> Pending => merchants
+        .Where(x => x.Status is MerchantStatus.Pending or MerchantStatus.UnderReview)
+        .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshAsync();
+        if (MerchantId.HasValue)
+        {
+            selected = merchants.SingleOrDefault(x => x.Id == MerchantId);
+        }
+    }
+
+    private void Select(Merchant merchant)
+    {
+        selected = merchant;
+        decision = ReviewDecision.MoreInformationRequired;
+        notes = "";
+    }
+
+    private void Close() => selected = null;
+
+    private async Task SubmitAsync()
+    {
+        if (selected is null || string.IsNullOrWhiteSpace(notes))
+        {
+            success = false;
+            message = "Reviewer notes are required.";
+            return;
+        }
+
+        submitting = true;
+        try
+        {
+            await ReviewService.ReviewAsync(selected.Id, new ReviewRequest(decision, notes));
+            success = true;
+            message = $"Decision recorded for {selected.CompanyName}.";
+            selected = null;
+            await RefreshAsync();
+        }
+        catch (Exception exception) when (exception is InvalidOperationException or UnauthorizedAccessException)
+        {
+            success = false;
+            message = exception.Message;
+        }
+        finally
+        {
+            submitting = false;
+        }
+    }
+
+    private async Task RefreshAsync() =>
+        merchants = await MerchantService.ListAsync(null, null, null);
+}

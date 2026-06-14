@@ -92,6 +92,26 @@ else
             </article>
         </section>
 
+        @if (merchant.Reviews.Count > 0)
+        {
+            <section class="card">
+                <h2>Reviewer Notes and Approval Timeline</h2>
+                <div class="timeline">
+                    @foreach (var review in merchant.Reviews.OrderByDescending(x => x.CreatedAtUtc))
+                    {
+                        <div class="timeline-item">
+                            <span class="timeline-dot @(review.Decision == ReviewDecision.Approved ? "complete" : "")"></span>
+                            <div>
+                                <strong>@review.Decision.ToString().Replace("MoreInformationRequired", "More Information Required")</strong>
+                                <p>@review.Notes</p>
+                                <small>@review.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy h:mm tt")</small>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </section>
+        }
+
         <section class="card">
             <h2>Document Requirements</h2>
             <div class="grid three requirements">

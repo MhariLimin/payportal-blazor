@@ -1,0 +1,76 @@
+@page "/applications"
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = PortalRoles.Admin)]
+@inject IMerchantService MerchantService
+
+<PageTitle>Applications - PayPortal</PageTitle>
+
+<div class="page">
+    <header class="page-header">
+        <div><h1>Merchant Applications</h1><p>Review and manage merchant onboarding applications</p></div>
+        <span class="muted">@Filtered.Count applications</span>
+    </header>
+
+    <section class="card filters">
+        <input class="input" @bind="search" @bind:event="oninput" placeholder="Search company or industry..." />
+        <select class="input" @bind="status">
+            <option value="">All statuses</option>
+            @foreach (var value in Enum.GetValues<MerchantStatus>())
+            {
+                <option value="@value">@value.ToString().Replace("UnderReview", "Under Review")</option>
+            }
+        </select>
+        <select class="input" @bind="risk">
+            <option value="">All risk levels</option>
+            @foreach (var value in Enum.GetValues<RiskLevel>())
+            {
+                <option value="@value">@value risk</option>
+            }
+        </select>
+    </section>
+
+    <section class="card flush">
+        <div class="list">
+            @if (Filtered.Count == 0)
+            {
+                <div class="empty-state"><h2>No applications found</h2><p class="muted">Adjust the search or filters.</p></div>
+            }
+            @foreach (var merchant in Filtered)
+            {
+                <div class="application-row">
+                    <span class="company-icon">▣</span>
+                    <span class="list-row-main">
+                        <h3>@merchant.CompanyName</h3>
+                        <p>@merchant.Industry · @merchant.BusinessType · Applied @merchant.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy")</p>
+                        @if (merchant.Contacts.FirstOrDefault() is { } contact)
+                        {
+                            <p>@contact.Name · @contact.Email</p>
+                        }
+                    </span>
+                    <StatusBadge Value="merchant.RiskLevel" />
+                    <StatusBadge Value="merchant.Status" />
+                    <a class="button secondary" href="/merchants/@merchant.Id">View profile</a>
+                    <a class="button primary" href="/admin/reviews?merchantId=@merchant.Id">Review</a>
+                </div>
+            }
+        </div>
+    </section>
+</div>
+
+@code {
+    private IReadOnlyList<Merchant> merchants = [];
+    private string search = "";
+    private string status = "";
+    private string risk = "";
+
+    private IReadOnlyList<Merchant> Filtered => merchants
+        .Where(x => string.IsNullOrWhiteSpace(search)
+            || x.CompanyName.Contains(search, StringComparison.OrdinalIgnoreCase)
+            || (x.Industry?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false))
+        .Where(x => string.IsNullOrWhiteSpace(status) || x.Status.ToString() == status)
+        .Where(x => string.IsNullOrWhiteSpace(risk) || x.RiskLevel.ToString() == risk)
+        .ToList();
+
+    protected override async Task OnInitializedAsync() =>
+        merchants = await MerchantService.ListAsync(null, null, null);
+}
