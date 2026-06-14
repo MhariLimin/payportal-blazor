@@ -2,6 +2,7 @@
 
 ## Commands
 
+- `.\scripts\run-local.ps1`: load `.env.local`, start MySQL, build, and run.
 - `dotnet restore PayPortal.sln`
 - `dotnet build PayPortal.sln --no-restore`
 - `dotnet test PayPortal.sln --no-build`
@@ -31,4 +32,3 @@
 - Use one-line Conventional Commit subjects.
 - Commit as `MhariLimin <mhariallen.limin@gmail.com>`.
 - Keep generated artifacts and secrets out of source control.
-

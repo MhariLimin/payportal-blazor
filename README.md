@@ -22,23 +22,17 @@ tracking, and secure API credential issuance.
 ## Run
 
 1. Install the .NET 8 SDK and Docker Desktop.
-2. Run `docker compose up -d mysql`.
-3. Set an administrator password:
+2. Copy the local configuration template.
+3. Run the launcher:
 
 ```powershell
-$env:SeedAdmin__Email="admin@payportal.local"
-$env:SeedAdmin__Password="ChangeThis123!"
+Copy-Item .env.example .env.local
+.\scripts\run-local.ps1
 ```
 
-4. Run:
-
-```powershell
-dotnet restore PayPortal.sln
-dotnet run --project src/PayPortal.Web
-```
-
-The app creates the development schema when no EF migration exists. Generate
-and commit a migration before production deployment. See [setup](docs/setup.md).
+ASP.NET Core does not load `.env.local` itself; the launcher imports it as
+process environment variables. See [setup](docs/setup.md) for details and
+manual commands.
 
 ## Verification
 
@@ -60,4 +54,6 @@ merchant registration.
 - [Security](docs/security.md)
 - [Implementation plan](docs/implementation-plan.md)
 - [Demo guide](docs/demo-guide.md)
+- [Feature and UI testing](docs/feature-testing-guide.md)
+- [Logo generation prompt](docs/logo-generation-prompt.md)
 - [Setup](docs/setup.md)
