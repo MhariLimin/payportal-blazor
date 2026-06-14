@@ -134,6 +134,13 @@ label { display: block; margin: 14px 0 6px; color: #334155; font-size: 14px; fon
 .modal-body { padding: 20px; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 20px; border-top: 1px solid #e2e8f0; }
 .selected-file { margin-top: 12px; padding: 12px; background: #ecfeff; border-radius: 8px; }
+.credential-row { display: flex; align-items: center; gap: 20px; padding: 20px; border-top: 1px solid #f1f5f9; }
+.credential-row:first-child { border-top: 0; }
+.credential-main { flex: 1; min-width: 0; }
+.credential-heading { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.credential-heading h3, .credential-heading p { margin: 0; }
+.credential-heading p { margin-top: 3px; color: #64748b; font-size: 12px; }
+.permission-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 
 @media (max-width: 900px) {
     .sidebar { display: none; }
