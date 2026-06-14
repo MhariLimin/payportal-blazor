@@ -21,7 +21,7 @@ public static class DependencyInjection
         var connectionString = configuration.GetConnectionString("PayPortal")
             ?? throw new InvalidOperationException("ConnectionStrings:PayPortal is required.");
         services.AddDbContext<PortalDbContext>(options =>
-            options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+            options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 0))));
 
         services.AddIdentityCore<PortalUser>(options =>
             {

@@ -3,4 +3,10 @@
     <ProjectReference Include="..\PayPortal.Application\PayPortal.Application.csproj" />
     <ProjectReference Include="..\PayPortal.Infrastructure\PayPortal.Infrastructure.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.13">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
 </Project>

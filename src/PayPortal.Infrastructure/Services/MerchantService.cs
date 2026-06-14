@@ -16,10 +16,16 @@ internal sealed class MerchantService(
         RiskLevel? risk,
         CancellationToken cancellationToken = default)
     {
-        var list = currentUser.IsAdmin
-            ? await merchants.ListAsync(cancellationToken)
-            : [await merchants.GetByOwnerAsync(RequireUser(), cancellationToken)]
-                .OfType<Merchant>().ToList();
+        IReadOnlyList<Merchant> list;
+        if (currentUser.IsAdmin)
+        {
+            list = await merchants.ListAsync(cancellationToken);
+        }
+        else
+        {
+            var owned = await merchants.GetByOwnerAsync(RequireUser(), cancellationToken);
+            list = owned is null ? [] : [owned];
+        }
 
         return list.Where(x =>
                 string.IsNullOrWhiteSpace(search) ||

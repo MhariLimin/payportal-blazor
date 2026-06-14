@@ -10,7 +10,7 @@ public sealed class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<Por
         var connectionString = Environment.GetEnvironmentVariable("PAYPORTAL_CONNECTION")
             ?? "Server=localhost;Port=3306;Database=payportal;User=payportal;Password=payportal;";
         var options = new DbContextOptionsBuilder<PortalDbContext>()
-            .UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
+            .UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 0)))
             .Options;
         return new PortalDbContext(options);
     }

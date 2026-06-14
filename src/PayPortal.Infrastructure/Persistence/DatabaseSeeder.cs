@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using PayPortal.Application.Common;
 using PayPortal.Infrastructure.Identity;
 
@@ -11,7 +13,7 @@ public static class DatabaseSeeder
     {
         await using var scope = services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<PortalDbContext>();
-        if ((await dbContext.Database.GetMigrationsAsync()).Any())
+        if (dbContext.Database.GetMigrations().Any())
         {
             await dbContext.Database.MigrateAsync();
         }

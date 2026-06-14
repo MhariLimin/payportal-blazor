@@ -13,7 +13,6 @@
     }
     <EditForm Model="Input" method="post" FormName="login" OnValidSubmit="LoginAsync">
         <DataAnnotationsValidator />
-        <AntiforgeryToken />
         <label>Email address</label>
         <InputText class="input" @bind-Value="Input.Email" autocomplete="email" />
         <ValidationMessage For="() => Input.Email" />
