@@ -18,10 +18,17 @@ dist-ssr
 *.suo
 *.ntvs*
 *.njsproj
-*.sln
 *.sw?
 .env
 .bolt
-.codex
 
 supabase
+
+# .NET
+bin/
+obj/
+*.user
+*.userosscache
+*.sln.docstates
+appsettings.Development.json
+uploads/
