@@ -1,0 +1,14 @@
+<nav class="nav-menu">
+    <NavLink href="/" Match="NavLinkMatch.All"><span>▦</span> Dashboard</NavLink>
+    <AuthorizeView Roles="@PortalRoles.Admin">
+        <NavLink href="/applications"><span>▤</span> Applications</NavLink>
+    </AuthorizeView>
+    <NavLink href="/merchant/profile"><span>▣</span> Merchant Profile</NavLink>
+    <NavLink href="/kyc"><span>✓</span> KYC Verification</NavLink>
+    <AuthorizeView Roles="@PortalRoles.Merchant">
+        <NavLink href="/api-credentials"><span>⚿</span> API Credentials</NavLink>
+    </AuthorizeView>
+    <AuthorizeView Roles="@PortalRoles.Admin">
+        <NavLink href="/admin/reviews"><span>☑</span> Admin Review</NavLink>
+    </AuthorizeView>
+</nav>

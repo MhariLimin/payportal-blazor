@@ -1,0 +1,58 @@
+@page "/account/register"
+@layout AccountLayout
+@attribute [AllowAnonymous]
+@inject IRegistrationService RegistrationService
+@inject UserManager<PortalUser> UserManager
+@inject SignInManager<PortalUser> SignInManager
+@inject NavigationManager Navigation
+
+<PageTitle>Merchant registration - PayPortal</PageTitle>
+<section class="account-card wide">
+    <h1>Apply as a merchant</h1>
+    <p class="muted">Create your account and submit the core business profile.</p>
+    @if (errors.Count > 0)
+    {
+        <div class="alert error">@string.Join(" ", errors)</div>
+    }
+    <EditForm Model="Input" method="post" FormName="register" OnValidSubmit="RegisterAsync">
+        <DataAnnotationsValidator />
+        <AntiforgeryToken />
+        <div class="form-grid">
+            <div><label>Company name</label><InputText class="input" @bind-Value="Input.CompanyName" /><ValidationMessage For="() => Input.CompanyName" /></div>
+            <div><label>Business type</label><InputText class="input" @bind-Value="Input.BusinessType" /><ValidationMessage For="() => Input.BusinessType" /></div>
+            <div><label>Tax ID</label><InputText class="input" @bind-Value="Input.TaxId" /><ValidationMessage For="() => Input.TaxId" /></div>
+            <div><label>Primary contact</label><InputText class="input" @bind-Value="Input.ContactName" /><ValidationMessage For="() => Input.ContactName" /></div>
+            <div><label>Email</label><InputText class="input" @bind-Value="Input.Email" /><ValidationMessage For="() => Input.Email" /></div>
+            <div><label>Phone</label><InputText class="input" @bind-Value="Input.Phone" /></div>
+            <div class="span-2"><label>Street address</label><InputText class="input" @bind-Value="Input.StreetAddress" /><ValidationMessage For="() => Input.StreetAddress" /></div>
+            <div><label>City</label><InputText class="input" @bind-Value="Input.City" /></div>
+            <div><label>State/Province</label><InputText class="input" @bind-Value="Input.State" /></div>
+            <div><label>Postal code</label><InputText class="input" @bind-Value="Input.PostalCode" /></div>
+            <div><label>Country</label><InputText class="input" @bind-Value="Input.Country" /></div>
+            <div><label>Password</label><InputText class="input" type="password" @bind-Value="Input.Password" /></div>
+            <div><label>Confirm password</label><InputText class="input" type="password" @bind-Value="Input.ConfirmPassword" /></div>
+        </div>
+        <ValidationSummary />
+        <button class="button primary full" type="submit">Create merchant account</button>
+    </EditForm>
+    <div class="account-links"><a href="/account/login">Already registered? Sign in</a></div>
+</section>
+
+@code {
+    [SupplyParameterFromForm] private MerchantRegistrationModel Input { get; set; } = new();
+    private IReadOnlyList<string> errors = [];
+
+    private async Task RegisterAsync()
+    {
+        var result = await RegistrationService.RegisterMerchantAsync(Input);
+        if (!result.Succeeded)
+        {
+            errors = result.Errors;
+            return;
+        }
+
+        var user = await UserManager.FindByEmailAsync(Input.Email);
+        await SignInManager.SignInAsync(user!, isPersistent: false);
+        Navigation.NavigateTo("/", forceLoad: true);
+    }
+}

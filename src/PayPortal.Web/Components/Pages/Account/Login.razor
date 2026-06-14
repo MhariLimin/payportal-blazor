@@ -1,0 +1,56 @@
+@page "/account/login"
+@layout AccountLayout
+@attribute [AllowAnonymous]
+@inject SignInManager<PortalUser> SignInManager
+@inject NavigationManager Navigation
+
+<PageTitle>Sign in - PayPortal</PageTitle>
+<section class="account-card">
+    <h1>Sign in to your account</h1>
+    @if (!string.IsNullOrWhiteSpace(error))
+    {
+        <div class="alert error">@error</div>
+    }
+    <EditForm Model="Input" method="post" FormName="login" OnValidSubmit="LoginAsync">
+        <DataAnnotationsValidator />
+        <AntiforgeryToken />
+        <label>Email address</label>
+        <InputText class="input" @bind-Value="Input.Email" autocomplete="email" />
+        <ValidationMessage For="() => Input.Email" />
+        <label>Password</label>
+        <InputText class="input" type="password" @bind-Value="Input.Password" autocomplete="current-password" />
+        <ValidationMessage For="() => Input.Password" />
+        <label class="checkbox"><InputCheckbox @bind-Value="Input.RememberMe" /> Remember me</label>
+        <button class="button primary full" type="submit">Sign in</button>
+    </EditForm>
+    <div class="account-links">
+        <a href="/account/forgot-password">Forgot password?</a>
+        <a href="/account/register">Apply as merchant</a>
+    </div>
+</section>
+
+@code {
+    [SupplyParameterFromForm] private LoginModel Input { get; set; } = new();
+    [SupplyParameterFromQuery] public string? ReturnUrl { get; set; }
+    private string? error;
+
+    private async Task LoginAsync()
+    {
+        var result = await SignInManager.PasswordSignInAsync(
+            Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: true);
+        if (result.Succeeded)
+        {
+            Navigation.NavigateTo(LocalReturnUrl(), forceLoad: true);
+            return;
+        }
+
+        error = result.IsLockedOut
+            ? "This account is temporarily locked."
+            : "Invalid email or password.";
+    }
+
+    private string LocalReturnUrl() =>
+        !string.IsNullOrWhiteSpace(ReturnUrl) && Uri.IsWellFormedUriString(ReturnUrl, UriKind.Relative)
+            ? ReturnUrl
+            : "/";
+}
