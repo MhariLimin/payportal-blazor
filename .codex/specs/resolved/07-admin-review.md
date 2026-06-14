@@ -1,5 +1,7 @@
 # 07 Admin Review
 
+Status: Resolved
+
 ## Goal
 
 Give administrators a complete review queue and decision workflow.
@@ -10,4 +12,3 @@ Give administrators a complete review queue and decision workflow.
 - Admin can approve, reject, or request more documents.
 - Notes and decisions are persisted with reviewer identity and UTC timestamp.
 - Merchant status and audit activity change atomically.
-

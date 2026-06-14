@@ -1,0 +1,31 @@
+@page "/docs"
+@rendermode InteractiveServer
+@attribute [Authorize]
+
+<PageTitle>Project documentation - PayPortal</PageTitle>
+
+<div class="page">
+    <header class="page-header"><div><h1>Project Documentation</h1><p>Architecture and interview demo references</p></div></header>
+    <section class="grid three">
+        @foreach (var item in Items)
+        {
+            <article class="card">
+                <h2>@item.Title</h2>
+                <p class="muted">@item.Description</p>
+                <code>@item.Path</code>
+            </article>
+        }
+    </section>
+</div>
+
+@code {
+    private readonly (string Title, string Description, string Path)[] Items =
+    [
+        ("Architecture", "Clean Architecture boundaries and request flow.", "docs/architecture.md"),
+        ("Database", "Code First entities, relationships, and migrations.", "docs/database.md"),
+        ("Security", "Identity, KYC storage, and credential protections.", "docs/security.md"),
+        ("Demo Guide", "An interview-ready walkthrough and talking points.", "docs/demo-guide.md"),
+        ("Setup", "MySQL, environment, build, and migration commands.", "docs/setup.md"),
+        ("Implementation Plan", "The ordered migration and delivery plan.", "docs/implementation-plan.md")
+    ];
+}

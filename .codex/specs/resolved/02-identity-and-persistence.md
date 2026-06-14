@@ -1,5 +1,7 @@
 # 02 Identity and Persistence
 
+Status: Resolved
+
 ## Goal
 
 Provide MySQL Code First persistence and ASP.NET Core Identity.
@@ -12,4 +14,3 @@ Provide MySQL Code First persistence and ASP.NET Core Identity.
 - EF entities cover merchants, contacts, addresses, KYC, reviews, credentials,
   webhooks, and activity.
 - Repositories use scoped DbContext instances.
-

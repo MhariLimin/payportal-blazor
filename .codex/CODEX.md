@@ -35,6 +35,7 @@ verify it, and keep unrelated changes out of scope.
 
 ## Current Focus
 
-The application is a polished merchant-onboarding prototype using sample data
-and demo authentication. The next foundation work is real Supabase auth,
-role-aware authorization, and data access with restrictive RLS.
+The application is a native Blazor Server merchant-onboarding portal using
+ASP.NET Core Identity, EF Core, and MySQL. The next work is automated test
+coverage and production integrations for email, private object storage,
+malware scanning, MFA, CI, and deployment.

@@ -1,5 +1,7 @@
 # 06 Dashboard
 
+Status: Resolved
+
 ## Goal
 
 Rebuild the operational dashboard from persisted data.
@@ -9,4 +11,3 @@ Rebuild the operational dashboard from persisted data.
 - Shows total, pending, under-review, and approved counts.
 - Shows approval rate, funnel, pending applications, and recent activity.
 - Merchant users see data scoped to their own application.
-

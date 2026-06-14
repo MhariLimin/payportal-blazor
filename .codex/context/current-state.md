@@ -2,7 +2,7 @@
 
 ## Migration
 
-The Bolt-generated React/Vite/Supabase prototype is being replaced by a native
+The Bolt-generated React/Vite/Supabase prototype has been replaced by a native
 ASP.NET Core 8 Blazor Server application. React remains only as the UX reference
 captured in the migration specification and Git history.
 
@@ -15,9 +15,12 @@ captured in the migration specification and Git history.
 - API key generation and rotation with one-time secret display.
 - Dashboard statistics, approval funnel, pending work, and recent activity.
 
-## Local Verification Constraint
+## Verification
 
-The current workstation does not expose the `dotnet` CLI. Source and project
-structure can be reviewed here, but restore, compile, EF migration generation,
-and automated tests require a .NET 8 SDK installation.
-
+- .NET SDK 8.0.422 installed.
+- Solution restore succeeds.
+- Solution build succeeds with zero warnings and errors.
+- Initial MySQL EF Core migration generated.
+- MySQL migration application, role/admin seeding, anonymous account routes,
+  authenticated admin dashboard, and merchant registration smoke tests pass.
+- Automated tests remain future work.

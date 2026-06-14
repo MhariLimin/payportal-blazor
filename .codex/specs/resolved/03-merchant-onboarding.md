@@ -1,5 +1,7 @@
 # 03 Merchant Onboarding
 
+Status: Resolved
+
 ## Goal
 
 Let a merchant register a company and maintain its onboarding profile.
@@ -10,4 +12,3 @@ Let a merchant register a company and maintain its onboarding profile.
 - A merchant can only read or edit its own profile.
 - Admins can inspect any merchant profile.
 - Validation errors are displayed without losing entered values.
-

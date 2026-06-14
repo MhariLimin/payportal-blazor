@@ -1,27 +1,17 @@
 # Roadmap
 
-## Tier 0: Migration Foundation
+## Delivered
 
-1. React-to-Blazor migration plan and Clean Architecture scaffold.
-   Spec: `../specs/active/01-blazor-migration.md`
-2. MySQL persistence, repositories, Identity, roles, and seed data.
-   Spec: `../specs/active/02-identity-and-persistence.md`
+1. Native ASP.NET Core 8 Blazor Server migration.
+2. Clean Architecture domain, application, infrastructure, and UI layers.
+3. MySQL Code First model, repositories, and Identity roles.
+4. Merchant registration, profile, KYC upload, and approval tracking.
+5. Admin dashboard, application inventory, and review decisions.
+6. Secure API credential issuance and rotation.
+7. Architecture, setup, security, schema, and interview demo documentation.
 
-## Tier 1: Merchant Journey
+## Next
 
-3. Merchant registration, profile, contact, and address workflow.
-   Spec: `../specs/active/03-merchant-onboarding.md`
-4. Private KYC upload, status, timeline, and reviewer notes.
-   Spec: `../specs/active/04-kyc-workflow.md`
-5. Secure API credential generation and regeneration.
-   Spec: `../specs/active/05-api-credentials.md`
-
-## Tier 2: Operations
-
-6. Dashboard statistics, funnel, pending approvals, and activity.
-   Spec: `../specs/active/06-dashboard.md`
-7. Admin application review and decisions.
-   Spec: `../specs/active/07-admin-review.md`
-8. Interview/demo documentation and verification.
-   Spec: `../specs/active/08-documentation-and-quality.md`
-
+8. Add unit, integration, authorization, and browser tests.
+9. Add production email, private object storage, malware scanning, MFA, CI,
+    observability, and deployment configuration.
