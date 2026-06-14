@@ -32,3 +32,5 @@ obj/
 *.sln.docstates
 appsettings.Development.json
 uploads/
+.dotnet-home/
+.nuget/
