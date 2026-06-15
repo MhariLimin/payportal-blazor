@@ -20,16 +20,41 @@ else if (merchant is null)
 else
 {
     <div class="page">
+        @if (MerchantId.HasValue)
+        {
+            <nav class="breadcrumbs" aria-label="Breadcrumb">
+                <a href="/applications">Applications</a><span>/</span><span>@merchant.CompanyName</span>
+            </nav>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(message))
+        {
+            <div class="alert @(success ? "success" : "error")">@message</div>
+        }
+
         <section class="profile-hero">
             <div class="profile-banner"></div>
             <div class="profile-summary">
-                <span class="profile-logo">▣</span>
-                <div>
+                @if (!string.IsNullOrWhiteSpace(merchant.LogoStorageName))
+                {
+                    <img class="profile-logo image" src="@LogoUrl" alt="@merchant.CompanyName logo" />
+                }
+                else
+                {
+                    <span class="profile-logo">PP</span>
+                }
+                <div class="profile-heading">
                     <h1>@merchant.CompanyName</h1>
                     <p>@(merchant.TradingName ?? merchant.BusinessType)</p>
                 </div>
                 <StatusBadge Value="merchant.Status" />
                 <StatusBadge Value="merchant.RiskLevel" />
+                <AuthorizeView Roles="@PortalRoles.Merchant">
+                    <div class="profile-actions">
+                        <button class="button secondary" @onclick="StartEditing">Edit profile</button>
+                        <button class="button primary" @onclick="() => showLogoUpload = true">Upload logo</button>
+                    </div>
+                </AuthorizeView>
             </div>
         </section>
 
@@ -49,7 +74,7 @@ else
                     </dl>
                     @if (!string.IsNullOrWhiteSpace(merchant.Description))
                     {
-                        <p class="muted">@merchant.Description</p>
+                        <p class="description">@merchant.Description</p>
                     }
                 </article>
 
@@ -62,7 +87,7 @@ else
                                 <span class="avatar">@contact.Name.FirstOrDefault()</span>
                                 <span class="list-row-main">
                                     <h3>@contact.Name @if (contact.IsPrimary) { <span class="badge approved">Primary</span> }</h3>
-                                    <p>@contact.Position · <a href="mailto:@contact.Email">@contact.Email</a> · @contact.Phone</p>
+                                    <p>@(contact.Position ?? "Contact") | <a href="mailto:@contact.Email">@contact.Email</a> | @(contact.Phone ?? "No phone")</p>
                                 </span>
                             </div>
                         }
@@ -75,7 +100,7 @@ else
                         @foreach (var address in merchant.Addresses)
                         {
                             <div class="address-block">
-                                <strong>@address.AddressType address</strong>
+                                <strong>@ToTitle(address.AddressType) address</strong>
                                 <span>@address.StreetAddress</span>
                                 <span>@address.City, @address.State @address.PostalCode</span>
                                 <span>@address.Country</span>
@@ -109,8 +134,12 @@ else
                 <article class="card">
                     <h2>Quick Actions</h2>
                     <div class="grid">
-                        <a class="button primary" href="@KycUrl()">Review KYC documents</a>
-                        @if (merchant.Status == MerchantStatus.Approved)
+                        <a class="button primary" href="@KycUrl()">View KYC documents</a>
+                        @if (MerchantId.HasValue)
+                        {
+                            <a class="button secondary" href="/applications">Back to applications</a>
+                        }
+                        else if (merchant.Status == MerchantStatus.Approved)
                         {
                             <a class="button secondary" href="/api-credentials">Manage API credentials</a>
                         }
@@ -121,19 +150,184 @@ else
     </div>
 }
 
+@if (editing && merchant is not null)
+{
+    <div class="modal-backdrop">
+        <section class="modal profile-edit-modal">
+            <div class="card-title"><h2>Edit Merchant Profile</h2><button class="icon-button" @onclick="() => editing = false">Close</button></div>
+            <EditForm Model="profileInput" OnValidSubmit="SaveProfileAsync">
+                <DataAnnotationsValidator />
+                <div class="modal-body form-grid">
+                    <div><label>Company name</label><InputText class="input" @bind-Value="profileInput.CompanyName" /><ValidationMessage For="() => profileInput.CompanyName" /></div>
+                    <div><label>Trading name</label><InputText class="input" @bind-Value="profileInput.TradingName" /></div>
+                    <div><label>Business type</label><InputSelect class="input" @bind-Value="profileInput.BusinessType">@foreach (var value in MerchantOptions.BusinessTypes) { <option value="@value">@value</option> }</InputSelect></div>
+                    <div><label>Industry</label><InputSelect class="input" @bind-Value="profileInput.Industry">@foreach (var value in MerchantOptions.Industries) { <option value="@value">@value</option> }</InputSelect></div>
+                    <div><label>Registration number</label><InputText class="input" @bind-Value="profileInput.RegistrationNumber" /></div>
+                    <div><label>Tax ID</label><InputText class="input" @bind-Value="profileInput.TaxId" /></div>
+                    <div><label>Website</label><InputText class="input" @bind-Value="profileInput.Website" /></div>
+                    <div><label>Founded year</label><InputNumber class="input" @bind-Value="profileInput.FoundedYear" /></div>
+                    <div><label>Employee count</label><InputNumber class="input" @bind-Value="profileInput.EmployeeCount" /></div>
+                    <div><label>Annual revenue range</label><InputText class="input" @bind-Value="profileInput.AnnualRevenueRange" /></div>
+                    <div class="span-2"><label>Company description</label><InputTextArea class="input" rows="3" @bind-Value="profileInput.Description" /></div>
+                    <div><label>Primary contact</label><InputText class="input" @bind-Value="profileInput.ContactName" /></div>
+                    <div><label>Position</label><InputText class="input" @bind-Value="profileInput.Position" /></div>
+                    <div><label>Contact email</label><InputText class="input" @bind-Value="profileInput.ContactEmail" /></div>
+                    <div><label>Phone</label><InputText class="input" @bind-Value="profileInput.Phone" /></div>
+                    <div class="span-2"><label>Street address</label><InputText class="input" @bind-Value="profileInput.StreetAddress" /></div>
+                    <div><label>City</label><InputText class="input" @bind-Value="profileInput.City" /></div>
+                    <div><label>State/Province</label><InputText class="input" @bind-Value="profileInput.State" /></div>
+                    <div><label>Postal code</label><InputText class="input" @bind-Value="profileInput.PostalCode" /></div>
+                    <div><label>Country</label><InputText class="input" @bind-Value="profileInput.Country" /></div>
+                </div>
+                <div class="modal-actions">
+                    <button class="button secondary" type="button" @onclick="() => editing = false">Cancel</button>
+                    <button class="button primary" type="submit" disabled="@saving">@(saving ? "Saving..." : "Save changes")</button>
+                </div>
+            </EditForm>
+        </section>
+    </div>
+}
+
+@if (showLogoUpload && merchant is not null)
+{
+    <div class="modal-backdrop">
+        <section class="modal">
+            <div class="card-title"><h2>Upload Company Logo</h2><button class="icon-button" @onclick="CloseLogoUpload">Close</button></div>
+            <div class="modal-body">
+                <InputFile OnChange="SelectLogo" accept=".png,.jpg,.jpeg" />
+                <p class="muted">Use a square PNG or JPEG image up to 2 MB.</p>
+                @if (selectedLogo is not null)
+                {
+                    <div class="selected-file">@selectedLogo.Name</div>
+                }
+            </div>
+            <div class="modal-actions">
+                <button class="button secondary" @onclick="CloseLogoUpload">Cancel</button>
+                <button class="button primary" disabled="@(selectedLogo is null || saving)" @onclick="UploadLogoAsync">Upload logo</button>
+            </div>
+        </section>
+    </div>
+}
+
 @code {
     [Parameter] public Guid? MerchantId { get; set; }
     private Merchant? merchant;
+    private MerchantProfileModel profileInput = new();
+    private IBrowserFile? selectedLogo;
     private bool loading = true;
+    private bool editing;
+    private bool showLogoUpload;
+    private bool saving;
+    private bool success;
+    private string? message;
+    private long logoVersion = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+    private string LogoUrl => $"/merchant-logos/{merchant!.Id}?v={logoVersion}";
 
-    protected override async Task OnParametersSetAsync()
+    protected override async Task OnParametersSetAsync() => await RefreshAsync();
+
+    private async Task RefreshAsync()
     {
         loading = true;
         merchant = await MerchantService.GetAccessibleAsync(MerchantId);
         loading = false;
     }
 
+    private void StartEditing()
+    {
+        var contact = merchant!.Contacts.First(x => x.IsPrimary);
+        var address = merchant.Addresses.First(x => x.IsPrimary);
+        profileInput = new MerchantProfileModel
+        {
+            CompanyName = merchant.CompanyName,
+            TradingName = merchant.TradingName,
+            RegistrationNumber = merchant.RegistrationNumber,
+            TaxId = merchant.TaxId,
+            BusinessType = merchant.BusinessType,
+            Industry = merchant.Industry ?? "",
+            Website = merchant.Website,
+            Description = merchant.Description,
+            FoundedYear = merchant.FoundedYear,
+            EmployeeCount = merchant.EmployeeCount,
+            AnnualRevenueRange = merchant.AnnualRevenueRange,
+            ContactName = contact.Name,
+            ContactEmail = contact.Email,
+            Phone = contact.Phone,
+            Position = contact.Position,
+            StreetAddress = address.StreetAddress,
+            City = address.City,
+            State = address.State,
+            PostalCode = address.PostalCode,
+            Country = address.Country
+        };
+        editing = true;
+    }
+
+    private async Task SaveProfileAsync()
+    {
+        saving = true;
+        try
+        {
+            await MerchantService.UpdateProfileAsync(merchant!.Id, profileInput);
+            success = true;
+            message = "Merchant profile updated successfully.";
+            editing = false;
+            await RefreshAsync();
+        }
+        catch (Exception exception) when (exception is InvalidOperationException or UnauthorizedAccessException)
+        {
+            success = false;
+            message = exception.Message;
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private void SelectLogo(InputFileChangeEventArgs args) => selectedLogo = args.File;
+
+    private async Task UploadLogoAsync()
+    {
+        if (selectedLogo is null || merchant is null)
+        {
+            return;
+        }
+
+        saving = true;
+        try
+        {
+            await using var stream = selectedLogo.OpenReadStream(2 * 1024 * 1024);
+            await MerchantService.UploadLogoAsync(
+                merchant.Id,
+                selectedLogo.ContentType,
+                selectedLogo.Size,
+                stream);
+            logoVersion = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            success = true;
+            message = "Company logo updated successfully.";
+            CloseLogoUpload();
+            await RefreshAsync();
+        }
+        catch (Exception exception) when (exception is IOException or InvalidOperationException)
+        {
+            success = false;
+            message = exception.Message;
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private void CloseLogoUpload()
+    {
+        showLogoUpload = false;
+        selectedLogo = null;
+    }
+
     private string KycUrl() => MerchantId.HasValue ? $"/merchants/{MerchantId}/kyc" : "/kyc";
+    private static string ToTitle(string value) =>
+        string.IsNullOrWhiteSpace(value) ? value : char.ToUpperInvariant(value[0]) + value[1..];
 
     private static RenderFragment Detail(string label, string? value) => builder =>
     {
