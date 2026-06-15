@@ -2,7 +2,7 @@ using PayPortal.Application.Abstractions;
 
 namespace PayPortal.Infrastructure.Storage;
 
-internal sealed class PrivateFileStorage(string rootPath) : IFileStorage
+internal sealed class PrivateFileStorage(string rootPath) : IFileStorage, ILogoStorage
 {
     public async Task<string> SaveAsync(
         Stream stream,

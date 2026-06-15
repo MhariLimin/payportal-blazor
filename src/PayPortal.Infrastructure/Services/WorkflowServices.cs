@@ -51,6 +51,38 @@ internal sealed class KycService(
         };
 
         dbContext.KycDocuments.Add(document);
+        var requiredTypes = new[]
+        {
+            "business_registration",
+            "tax_certificate",
+            "id_document"
+        };
+        var existingTypes = await dbContext.KycDocuments
+            .Where(x => x.MerchantId == merchantId)
+            .Select(x => x.DocumentType)
+            .ToListAsync(cancellationToken);
+        existingTypes.Add(type);
+        var requiredDocumentsComplete = requiredTypes.All(existingTypes.Contains);
+        if (requiredDocumentsComplete)
+        {
+            await CompleteMilestoneAsync(merchantId, "documents", cancellationToken);
+            var merchant = await dbContext.Merchants.SingleAsync(
+                x => x.Id == merchantId, cancellationToken);
+            if (merchant.Status == MerchantStatus.Pending)
+            {
+                merchant.Status = MerchantStatus.UnderReview;
+                merchant.UpdatedAtUtc = DateTime.UtcNow;
+                dbContext.ActivityEntries.Add(new ActivityEntry
+                {
+                    MerchantId = merchantId,
+                    ActorUserId = currentUser.UserId!,
+                    Action = "application_ready_for_review",
+                    EntityType = nameof(Merchant),
+                    EntityId = merchantId.ToString()
+                });
+            }
+        }
+
         dbContext.ActivityEntries.Add(new ActivityEntry
         {
             MerchantId = merchantId,
@@ -62,6 +94,39 @@ internal sealed class KycService(
         });
         await dbContext.SaveChangesAsync(cancellationToken);
         return document;
+    }
+
+    public async Task<StoredFile?> OpenDocumentAsync(
+        Guid documentId,
+        CancellationToken cancellationToken = default)
+    {
+        var document = await dbContext.KycDocuments.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.Id == documentId, cancellationToken);
+        if (document is null)
+        {
+            return null;
+        }
+
+        _ = await merchantService.GetAccessibleAsync(document.MerchantId, cancellationToken)
+            ?? throw new UnauthorizedAccessException("The document is not accessible.");
+        var stream = await storage.OpenReadAsync(document.StorageName, cancellationToken);
+        return stream is null
+            ? null
+            : new StoredFile(stream, document.ContentType, document.DocumentName);
+    }
+
+    private async Task CompleteMilestoneAsync(
+        Guid merchantId,
+        string type,
+        CancellationToken cancellationToken)
+    {
+        var milestone = await dbContext.KycMilestones.SingleOrDefaultAsync(
+            x => x.MerchantId == merchantId && x.Type == type, cancellationToken);
+        if (milestone is not null && !milestone.IsCompleted)
+        {
+            milestone.IsCompleted = true;
+            milestone.CompletedAtUtc = DateTime.UtcNow;
+        }
     }
 }
 
@@ -159,6 +224,30 @@ internal sealed class ReviewService(
         merchant.ApprovedByUserId = request.Decision == ReviewDecision.Approved
             ? currentUser.UserId
             : null;
+        await SetMilestoneAsync(
+            merchantId,
+            "review",
+            request.Decision is ReviewDecision.Approved or ReviewDecision.Rejected,
+            cancellationToken);
+        await SetMilestoneAsync(
+            merchantId,
+            "approval",
+            request.Decision == ReviewDecision.Approved,
+            cancellationToken);
+
+        if (request.Decision == ReviewDecision.Approved)
+        {
+            var documents = await dbContext.KycDocuments
+                .Where(x => x.MerchantId == merchantId && x.Status == DocumentStatus.Pending)
+                .ToListAsync(cancellationToken);
+            foreach (var document in documents)
+            {
+                document.Status = DocumentStatus.Verified;
+                document.ReviewerNotes = request.Notes.Trim();
+                document.ReviewedAtUtc = DateTime.UtcNow;
+                document.ReviewedByUserId = currentUser.UserId;
+            }
+        }
 
         dbContext.ApplicationReviews.Add(new ApplicationReview
         {
@@ -177,5 +266,22 @@ internal sealed class ReviewService(
             EntityId = merchantId.ToString()
         });
         await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task SetMilestoneAsync(
+        Guid merchantId,
+        string type,
+        bool complete,
+        CancellationToken cancellationToken)
+    {
+        var milestone = await dbContext.KycMilestones.SingleOrDefaultAsync(
+            x => x.MerchantId == merchantId && x.Type == type, cancellationToken);
+        if (milestone is null)
+        {
+            return;
+        }
+
+        milestone.IsCompleted = complete;
+        milestone.CompletedAtUtc = complete ? DateTime.UtcNow : null;
     }
 }

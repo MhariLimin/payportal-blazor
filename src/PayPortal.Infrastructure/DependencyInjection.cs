@@ -47,6 +47,8 @@ public static class DependencyInjection
         services.AddScoped<ISecretGenerator, SecretGenerator>();
         services.AddSingleton<IFileStorage>(
             new PrivateFileStorage(Path.Combine(contentRoot, "uploads", "kyc")));
+        services.AddSingleton<ILogoStorage>(
+            new PrivateFileStorage(Path.Combine(contentRoot, "uploads", "logos")));
         return services;
     }
 }

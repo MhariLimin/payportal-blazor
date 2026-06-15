@@ -27,6 +27,13 @@ public interface IFileStorage
     Task DeleteAsync(string storageName, CancellationToken cancellationToken);
 }
 
+public interface ILogoStorage
+{
+    Task<string> SaveAsync(Stream stream, string extension, CancellationToken cancellationToken);
+    Task<Stream?> OpenReadAsync(string storageName, CancellationToken cancellationToken);
+    Task DeleteAsync(string storageName, CancellationToken cancellationToken);
+}
+
 public interface ISecretGenerator
 {
     (string PublicKey, string Secret, string SecretHash) Generate(string environment);

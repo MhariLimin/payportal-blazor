@@ -17,6 +17,8 @@ public sealed class Merchant : Entity
     public int? FoundedYear { get; set; }
     public int? EmployeeCount { get; set; }
     public string? AnnualRevenueRange { get; set; }
+    public string? LogoStorageName { get; set; }
+    public string? LogoContentType { get; set; }
     public MerchantStatus Status { get; set; } = MerchantStatus.Pending;
     public RiskLevel RiskLevel { get; set; } = RiskLevel.Low;
     public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;

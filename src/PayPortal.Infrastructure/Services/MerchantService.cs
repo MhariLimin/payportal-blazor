@@ -8,12 +8,18 @@ namespace PayPortal.Infrastructure.Services;
 internal sealed class MerchantService(
     IMerchantRepository merchants,
     IActivityRepository activities,
+    ILogoStorage logoStorage,
     ICurrentUser currentUser) : IMerchantService
 {
+    private static readonly HashSet<string> AllowedLogoTypes =
+        ["image/png", "image/jpeg"];
+
     public async Task<IReadOnlyList<Merchant>> ListAsync(
         string? search,
         MerchantStatus? status,
         RiskLevel? risk,
+        string? businessType = null,
+        string? industry = null,
         CancellationToken cancellationToken = default)
     {
         IReadOnlyList<Merchant> list;
@@ -33,6 +39,8 @@ internal sealed class MerchantService(
                 (x.Industry?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false))
             .Where(x => status is null || x.Status == status)
             .Where(x => risk is null || x.RiskLevel == risk)
+            .Where(x => string.IsNullOrWhiteSpace(businessType) || x.BusinessType == businessType)
+            .Where(x => string.IsNullOrWhiteSpace(industry) || x.Industry == industry)
             .ToList();
     }
 
@@ -56,9 +64,10 @@ internal sealed class MerchantService(
 
     public async Task<DashboardModel> GetDashboardAsync(CancellationToken cancellationToken = default)
     {
-        var list = await ListAsync(null, null, null, cancellationToken);
+        var list = await ListAsync(null, null, null, cancellationToken: cancellationToken);
         var decided = list.Count(x => x.Status is MerchantStatus.Approved or MerchantStatus.Rejected);
         var merchantId = currentUser.IsAdmin ? null : list.SingleOrDefault()?.Id;
+        var recentActivity = await activities.ListRecentAsync(merchantId, 8, cancellationToken);
         return new DashboardModel(
             list.Count,
             list.Count(x => x.Status == MerchantStatus.Pending),
@@ -70,8 +79,173 @@ internal sealed class MerchantService(
                 list.Count(x => x.Status == MerchantStatus.Approved) * 100m / decided, 1),
             list.Where(x => x.Status is MerchantStatus.Pending or MerchantStatus.UnderReview)
                 .Take(5).ToList(),
-            await activities.ListRecentAsync(merchantId, 8, cancellationToken));
+            recentActivity.Select(ToDashboardActivity).ToList());
     }
+
+    public async Task UpdateProfileAsync(
+        Guid merchantId,
+        MerchantProfileModel model,
+        CancellationToken cancellationToken = default)
+    {
+        var merchant = await RequireOwnedMerchantAsync(merchantId, cancellationToken);
+        var contact = merchant.Contacts.FirstOrDefault(x => x.IsPrimary)
+            ?? throw new InvalidOperationException("Primary contact is missing.");
+        var address = merchant.Addresses.FirstOrDefault(x => x.IsPrimary)
+            ?? throw new InvalidOperationException("Primary address is missing.");
+
+        merchant.CompanyName = model.CompanyName.Trim();
+        merchant.TradingName = Clean(model.TradingName);
+        merchant.RegistrationNumber = Clean(model.RegistrationNumber);
+        merchant.TaxId = model.TaxId.Trim();
+        merchant.BusinessType = model.BusinessType.Trim();
+        merchant.Industry = model.Industry.Trim();
+        merchant.Website = Clean(model.Website);
+        merchant.Description = Clean(model.Description);
+        merchant.FoundedYear = model.FoundedYear;
+        merchant.EmployeeCount = model.EmployeeCount;
+        merchant.AnnualRevenueRange = Clean(model.AnnualRevenueRange);
+        merchant.UpdatedAtUtc = DateTime.UtcNow;
+
+        contact.Name = model.ContactName.Trim();
+        contact.Email = model.ContactEmail.Trim();
+        contact.Phone = Clean(model.Phone);
+        contact.Position = Clean(model.Position);
+
+        address.StreetAddress = model.StreetAddress.Trim();
+        address.City = model.City.Trim();
+        address.State = Clean(model.State);
+        address.PostalCode = model.PostalCode.Trim();
+        address.Country = model.Country.Trim();
+
+        await activities.AddAsync(new ActivityEntry
+        {
+            MerchantId = merchant.Id,
+            ActorUserId = RequireUser(),
+            Action = "merchant_profile_updated",
+            EntityType = nameof(Merchant),
+            EntityId = merchant.Id.ToString(),
+            Details = merchant.CompanyName
+        }, cancellationToken);
+        await merchants.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task UploadLogoAsync(
+        Guid merchantId,
+        string contentType,
+        long size,
+        Stream stream,
+        CancellationToken cancellationToken = default)
+    {
+        if (size <= 0 || size > 2 * 1024 * 1024 || !AllowedLogoTypes.Contains(contentType))
+        {
+            throw new InvalidOperationException("Upload a PNG or JPEG logo up to 2 MB.");
+        }
+
+        var merchant = await RequireOwnedMerchantAsync(merchantId, cancellationToken);
+        var oldStorageName = merchant.LogoStorageName;
+        var extension = contentType == "image/png" ? ".png" : ".jpg";
+        merchant.LogoStorageName = await logoStorage.SaveAsync(stream, extension, cancellationToken);
+        merchant.LogoContentType = contentType;
+        merchant.UpdatedAtUtc = DateTime.UtcNow;
+
+        await activities.AddAsync(new ActivityEntry
+        {
+            MerchantId = merchant.Id,
+            ActorUserId = RequireUser(),
+            Action = "company_logo_updated",
+            EntityType = nameof(Merchant),
+            EntityId = merchant.Id.ToString(),
+            Details = merchant.CompanyName
+        }, cancellationToken);
+        await merchants.SaveChangesAsync(cancellationToken);
+
+        if (!string.IsNullOrWhiteSpace(oldStorageName))
+        {
+            await logoStorage.DeleteAsync(oldStorageName, cancellationToken);
+        }
+    }
+
+    public async Task<StoredFile?> OpenLogoAsync(
+        Guid merchantId,
+        CancellationToken cancellationToken = default)
+    {
+        var merchant = await GetAccessibleAsync(merchantId, cancellationToken);
+        if (merchant?.LogoStorageName is null || merchant.LogoContentType is null)
+        {
+            return null;
+        }
+
+        var stream = await logoStorage.OpenReadAsync(merchant.LogoStorageName, cancellationToken);
+        return stream is null
+            ? null
+            : new StoredFile(stream, merchant.LogoContentType, $"{merchant.CompanyName}-logo");
+    }
+
+    private async Task<Merchant> RequireOwnedMerchantAsync(
+        Guid merchantId,
+        CancellationToken cancellationToken)
+    {
+        if (currentUser.IsAdmin)
+        {
+            throw new UnauthorizedAccessException("Merchant profile changes require a merchant account.");
+        }
+
+        return await GetAccessibleAsync(merchantId, cancellationToken)
+            ?? throw new InvalidOperationException("Merchant not found.");
+    }
+
+    private static DashboardActivity ToDashboardActivity(ActivityEntry activity)
+    {
+        var merchantName = activity.Merchant?.CompanyName;
+        var subject = string.IsNullOrWhiteSpace(merchantName) ? "A merchant" : merchantName;
+        var (title, description) = activity.Action switch
+        {
+            "document_uploaded" => (
+                "KYC document uploaded",
+                $"{subject} uploaded {Humanize(activity.Details ?? "a KYC document")}."),
+            "merchant_profile_updated" => (
+                "Merchant profile updated",
+                $"{subject} updated its company profile."),
+            "company_logo_updated" => (
+                "Company logo updated",
+                $"{subject} uploaded a new company logo."),
+            "application_ready_for_review" => (
+                "Application ready for review",
+                $"{subject} submitted all required KYC documents."),
+            "application_approved" => (
+                "Application approved",
+                $"{subject} was approved by an administrator."),
+            "application_rejected" => (
+                "Application rejected",
+                $"{subject} was rejected by an administrator."),
+            "application_moreinformationrequired" => (
+                "Additional documents requested",
+                $"An administrator requested more information from {subject}."),
+            "api_credential_issued" => (
+                "API credential issued",
+                $"{subject} generated a new API credential."),
+            _ => (Humanize(activity.Action), $"{subject}: {Humanize(activity.Details ?? activity.Action)}.")
+        };
+
+        return new DashboardActivity(
+            activity.Id,
+            activity.MerchantId,
+            merchantName,
+            title,
+            description,
+            activity.CreatedAtUtc);
+    }
+
+    private static string Humanize(string value)
+    {
+        var words = value.Replace('_', ' ').Trim();
+        return string.IsNullOrWhiteSpace(words)
+            ? "Activity recorded"
+            : char.ToUpperInvariant(words[0]) + words[1..];
+    }
+
+    private static string? Clean(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
     private string RequireUser() =>
         currentUser.UserId ?? throw new UnauthorizedAccessException("Authentication required.");

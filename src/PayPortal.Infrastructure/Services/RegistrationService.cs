@@ -37,6 +37,7 @@ internal sealed class RegistrationService(
             CompanyName = model.CompanyName.Trim(),
             TaxId = model.TaxId.Trim(),
             BusinessType = model.BusinessType.Trim(),
+            Industry = model.Industry.Trim(),
             Contacts =
             [
                 new MerchantContact
@@ -63,10 +64,10 @@ internal sealed class RegistrationService(
             ],
             KycMilestones =
             [
-                Milestone("profile", "Complete Company Profile", true),
-                Milestone("documents", "Upload Required Documents", false),
-                Milestone("review", "Compliance Review", false),
-                Milestone("approval", "Application Approval", false)
+                Milestone("profile", "Complete Company Profile", "Provide the company, contact, and registered address information.", true),
+                Milestone("documents", "Upload Required Documents", "Upload the incorporation, tax registration, and director identity documents.", false),
+                Milestone("review", "Compliance Review", "An administrator checks the company details and uploaded evidence.", false),
+                Milestone("approval", "Application Approval", "The application is approved after compliance review succeeds.", false)
             ]
         };
         dbContext.Merchants.Add(merchant);
@@ -77,10 +78,15 @@ internal sealed class RegistrationService(
         return (true, []);
     }
 
-    private static KycMilestone Milestone(string type, string title, bool complete) => new()
+    private static KycMilestone Milestone(
+        string type,
+        string title,
+        string description,
+        bool complete) => new()
     {
         Type = type,
         Title = title,
+        Description = description,
         IsRequired = true,
         IsCompleted = complete,
         CompletedAtUtc = complete ? DateTime.UtcNow : null

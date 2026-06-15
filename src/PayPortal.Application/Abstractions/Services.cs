@@ -12,14 +12,18 @@ public interface ICurrentUser
 
 public interface IMerchantService
 {
-    Task<IReadOnlyList<Merchant>> ListAsync(string? search, MerchantStatus? status, RiskLevel? risk, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Merchant>> ListAsync(string? search, MerchantStatus? status, RiskLevel? risk, string? businessType = null, string? industry = null, CancellationToken cancellationToken = default);
     Task<Merchant?> GetAccessibleAsync(Guid? merchantId, CancellationToken cancellationToken = default);
     Task<DashboardModel> GetDashboardAsync(CancellationToken cancellationToken = default);
+    Task UpdateProfileAsync(Guid merchantId, MerchantProfileModel model, CancellationToken cancellationToken = default);
+    Task UploadLogoAsync(Guid merchantId, string contentType, long size, Stream stream, CancellationToken cancellationToken = default);
+    Task<StoredFile?> OpenLogoAsync(Guid merchantId, CancellationToken cancellationToken = default);
 }
 
 public interface IKycService
 {
     Task<KycDocument> UploadAsync(Guid merchantId, string type, string fileName, string contentType, long size, Stream stream, CancellationToken cancellationToken = default);
+    Task<StoredFile?> OpenDocumentAsync(Guid documentId, CancellationToken cancellationToken = default);
 }
 
 public interface ICredentialService

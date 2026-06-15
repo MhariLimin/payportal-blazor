@@ -34,6 +34,9 @@ public sealed class PortalDbContext(DbContextOptions<PortalDbContext> options)
             entity.Property(x => x.OwnerUserId).HasMaxLength(450);
             entity.Property(x => x.TaxId).HasMaxLength(100);
             entity.Property(x => x.BusinessType).HasMaxLength(100);
+            entity.Property(x => x.Industry).HasMaxLength(100);
+            entity.Property(x => x.LogoStorageName).HasMaxLength(200);
+            entity.Property(x => x.LogoContentType).HasMaxLength(100);
             entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(30);
             entity.Property(x => x.RiskLevel).HasConversion<string>().HasMaxLength(20);
             entity.HasIndex(x => x.OwnerUserId).IsUnique();

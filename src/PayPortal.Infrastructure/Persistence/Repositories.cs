@@ -39,7 +39,9 @@ internal sealed class ActivityRepository(PortalDbContext dbContext) : IActivityR
         int count,
         CancellationToken cancellationToken = default)
     {
-        var query = dbContext.ActivityEntries.AsNoTracking();
+        IQueryable<ActivityEntry> query = dbContext.ActivityEntries
+            .AsNoTracking()
+            .Include(x => x.Merchant);
         if (merchantId.HasValue)
         {
             query = query.Where(x => x.MerchantId == merchantId);

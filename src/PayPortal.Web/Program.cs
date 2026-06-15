@@ -44,6 +44,28 @@ app.MapPost("/account/logout", async (
     return Results.LocalRedirect("/account/login");
 }).RequireAuthorization();
 
+app.MapGet("/merchant-logos/{merchantId:guid}", async (
+    Guid merchantId,
+    IMerchantService merchantService,
+    CancellationToken cancellationToken) =>
+{
+    var file = await merchantService.OpenLogoAsync(merchantId, cancellationToken);
+    return file is null
+        ? Results.NotFound()
+        : Results.File(file.Stream, file.ContentType);
+}).RequireAuthorization(policy => policy.RequireRole("Merchant", "Admin"));
+
+app.MapGet("/kyc-documents/{documentId:guid}/download", async (
+    Guid documentId,
+    IKycService kycService,
+    CancellationToken cancellationToken) =>
+{
+    var file = await kycService.OpenDocumentAsync(documentId, cancellationToken);
+    return file is null
+        ? Results.NotFound()
+        : Results.File(file.Stream, file.ContentType, file.DownloadName);
+}).RequireAuthorization(policy => policy.RequireRole("Merchant", "Admin"));
+
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
