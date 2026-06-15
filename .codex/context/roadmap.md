@@ -9,9 +9,6 @@
 5. Admin dashboard, application inventory, and review decisions.
 6. Secure API credential issuance and rotation.
 7. Architecture, setup, security, schema, and interview demo documentation.
-
-## Active
-
 8. Automate first-run development admin credentials with ASP.NET Core User
    Secrets while preserving explicit override and reset options.
 9. Improve merchant onboarding with required-field indicators, standard

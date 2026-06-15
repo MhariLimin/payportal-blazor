@@ -14,6 +14,10 @@ captured in the migration specification and Git history.
 - Admin application search, review, approval, rejection, and document requests.
 - API key generation and rotation with one-time secret display.
 - Dashboard statistics, approval funnel, pending work, and recent activity.
+- Editable merchant profiles and private company-logo uploads.
+- Functional KYC milestones and authorized document downloads.
+- Merchant-aware activity descriptions, admin filters, and detail breadcrumbs.
+- PayPortal branding with persistent light, dark, and system themes.
 
 ## Verification
 
@@ -21,6 +25,10 @@ captured in the migration specification and Git history.
 - Solution restore succeeds.
 - Solution build succeeds with zero warnings and errors.
 - Initial MySQL EF Core migration generated.
+- Merchant-logo migration generated and applied to local MySQL.
 - MySQL migration application, role/admin seeding, anonymous account routes,
   authenticated admin dashboard, and merchant registration smoke tests pass.
+- Solution build succeeds with zero warnings and errors after feedback work.
+- Registration fields/options, static brand assets, protected redirects,
+  authenticated admin filters, and role-specific navigation are route tested.
 - Automated tests remain future work.

@@ -6,6 +6,7 @@
 - ASP.NET Core Identity for authentication, password reset, and roles.
 - Entity Framework Core with Pomelo's MySQL provider.
 - Local private file storage behind an application abstraction for KYC uploads.
+- Separate private storage roots for KYC evidence and merchant logos.
 
 ## Clean Architecture
 
@@ -23,6 +24,7 @@ Domain; Application depends only on Domain; Domain has no project dependency.
 
 - Merchant ownership and administrator permissions are checked in services.
 - KYC files are stored outside `wwwroot` and streamed through authorized code.
+- Merchant logos are owner-managed and streamed to authenticated owners/admins.
 - API secrets are generated server-side, hashed at rest, and shown once.
 - Review decisions and sensitive operations create activity records.
 - Production secrets belong in environment variables or user secrets.
@@ -40,4 +42,3 @@ Domain; Application depends only on Domain; Domain has no project dependency.
 | `KYCVerification.tsx` | `/kyc` and `/merchants/{id}/kyc` | Owner or Admin |
 | `APICredentials.tsx` | `/api-credentials` | Approved Merchant |
 | `AdminReview.tsx` | `/admin/reviews` | Admin |
-

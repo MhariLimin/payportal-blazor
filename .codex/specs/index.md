@@ -2,10 +2,7 @@
 
 ## Active
 
-9. `active/09-development-admin-bootstrap.md`
-10. `active/10-merchant-profile-and-logo.md`
-11. `active/11-kyc-admin-workflow.md`
-12. `active/12-branding-theme-and-ui.md`
+- No active implementation spec.
 
 ## Pending
 
@@ -21,3 +18,7 @@
 6. `resolved/06-dashboard.md`
 7. `resolved/07-admin-review.md`
 8. `resolved/08-documentation-and-quality.md`
+9. `resolved/09-development-admin-bootstrap.md`
+10. `resolved/10-merchant-profile-and-logo.md`
+11. `resolved/11-kyc-admin-workflow.md`
+12. `resolved/12-branding-theme-and-ui.md`
