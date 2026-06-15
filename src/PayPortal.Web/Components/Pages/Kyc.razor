@@ -14,13 +14,35 @@
 else
 {
     <div class="page">
+        @if (MerchantId.HasValue)
+        {
+            <nav class="breadcrumbs" aria-label="Breadcrumb">
+                <a href="/applications">Applications</a><span>/</span>
+                <a href="/merchants/@merchant.Id">@merchant.CompanyName</a><span>/</span>
+                <span>KYC documents</span>
+            </nav>
+        }
+
         <header class="page-header">
             <div>
                 <h1>KYC Verification</h1>
-                <p>@merchant.CompanyName · Document verification status</p>
+                <p>@merchant.CompanyName | Document verification status</p>
             </div>
-            <button class="button primary" @onclick="() => showUpload = true">Upload Document</button>
+            <div class="header-actions">
+                @if (MerchantId.HasValue)
+                {
+                    <a class="button secondary" href="/merchants/@merchant.Id">Back to profile</a>
+                }
+                <AuthorizeView Roles="@PortalRoles.Merchant">
+                    <button class="button primary" @onclick="() => showUpload = true">Upload Document</button>
+                </AuthorizeView>
+            </div>
         </header>
+
+        <section class="card workflow-explainer">
+            <strong>How verification works</strong>
+            <p>Upload the three required documents in any order. After all required evidence is present, the application moves to Compliance Review, where an administrator checks the company information and files before approving or requesting changes.</p>
+        </section>
 
         <section class="grid stats">
             <article class="card">
@@ -48,10 +70,14 @@ else
                             <span class="timeline-dot @(milestone.IsCompleted ? "complete" : "")"></span>
                             <div>
                                 <strong>@milestone.Title</strong>
-                                <p class="muted">@milestone.Description</p>
+                                <p class="muted">@MilestoneDescription(milestone)</p>
                                 @if (milestone.CompletedAtUtc.HasValue)
                                 {
                                     <small>Completed @milestone.CompletedAtUtc.Value.ToLocalTime().ToString("MMM d, yyyy")</small>
+                                }
+                                else
+                                {
+                                    <small class="muted">Pending</small>
                                 }
                             </div>
                         </div>
@@ -72,10 +98,10 @@ else
                     @foreach (var document in merchant.KycDocuments.OrderByDescending(x => x.CreatedAtUtc))
                     {
                         <div class="document-row">
-                            <span class="company-icon">▤</span>
+                            <span class="company-icon">DOC</span>
                             <span class="list-row-main">
                                 <h3>@document.DocumentName</h3>
-                                <p>@document.DocumentType.Replace('_', ' ') · @FormatBytes(document.FileSize) · @document.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy")</p>
+                                <p>@Humanize(document.DocumentType) | @FormatBytes(document.FileSize) | @document.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy")</p>
                                 @if (!string.IsNullOrWhiteSpace(document.ReviewerNotes))
                                 {
                                     <div class="review-note"><strong>Reviewer note:</strong> @document.ReviewerNotes</div>
@@ -86,6 +112,7 @@ else
                                 }
                             </span>
                             <StatusBadge Value="document.Status" />
+                            <a class="button secondary" href="/kyc-documents/@document.Id/download">View or download</a>
                         </div>
                     }
                 </div>
@@ -102,7 +129,7 @@ else
                         <div class="timeline-item">
                             <span class="timeline-dot @(review.Decision == ReviewDecision.Approved ? "complete" : "")"></span>
                             <div>
-                                <strong>@review.Decision.ToString().Replace("MoreInformationRequired", "More Information Required")</strong>
+                                <strong>@FormatDecision(review.Decision)</strong>
                                 <p>@review.Notes</p>
                                 <small>@review.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy h:mm tt")</small>
                             </div>
@@ -119,7 +146,7 @@ else
                 {
                     var document = merchant.KycDocuments.FirstOrDefault(x => x.DocumentType == requirement.Type);
                     <div class="requirement">
-                        <span>@(document?.Status == DocumentStatus.Verified ? "✓" : document is null ? "!" : "◷")</span>
+                        <span class="requirement-state">@(document?.Status == DocumentStatus.Verified ? "OK" : document is null ? "!" : "...")</span>
                         <div><strong>@requirement.Label</strong><p class="muted">@(requirement.Required ? "Required" : "Optional")</p></div>
                     </div>
                 }
@@ -145,7 +172,7 @@ else
                     <p class="muted">PDF, PNG, or JPEG up to 10 MB.</p>
                     @if (selectedFile is not null)
                     {
-                        <div class="selected-file">@selectedFile.Name · @FormatBytes(selectedFile.Size)</div>
+                        <div class="selected-file">@selectedFile.Name | @FormatBytes(selectedFile.Size)</div>
                     }
                 </div>
                 <div class="modal-actions">
@@ -225,6 +252,29 @@ else
         showUpload = false;
         selectedFile = null;
     }
+
+    private static string MilestoneDescription(KycMilestone milestone) =>
+        !string.IsNullOrWhiteSpace(milestone.Description)
+            ? milestone.Description
+            : milestone.Type switch
+            {
+                "profile" => "Provide the company, contact, and registered address information.",
+                "documents" => "Upload the incorporation, tax registration, and director identity documents.",
+                "review" => "An administrator checks the company details and uploaded evidence.",
+                "approval" => "The application is approved after compliance review succeeds.",
+                _ => "Complete this onboarding step."
+            };
+
+    private static string Humanize(string value)
+    {
+        var text = value.Replace('_', ' ');
+        return char.ToUpperInvariant(text[0]) + text[1..];
+    }
+
+    private static string FormatDecision(ReviewDecision decision) =>
+        decision == ReviewDecision.MoreInformationRequired
+            ? "More Information Required"
+            : decision.ToString();
 
     private static string FormatBytes(long bytes) =>
         bytes >= 1024 * 1024 ? $"{bytes / 1024d / 1024d:F1} MB" : $"{bytes / 1024d:F1} KB";

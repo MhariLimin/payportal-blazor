@@ -8,7 +8,7 @@
 
 <div class="page">
     <header class="page-header">
-        <div><h1>Admin Review</h1><p>Review pending merchant applications and record decisions</p></div>
+        <div><h1>Admin Review</h1><p>Review merchant applications, inspect evidence, and record decisions.</p></div>
         <span class="muted">@Pending.Count awaiting action</span>
     </header>
 
@@ -26,13 +26,21 @@
             @foreach (var merchant in Pending)
             {
                 <div class="application-row">
-                    <span class="company-icon">▣</span>
+                    @if (!string.IsNullOrWhiteSpace(merchant.LogoStorageName))
+                    {
+                        <img class="company-logo" src="/merchant-logos/@merchant.Id" alt="" />
+                    }
+                    else
+                    {
+                        <span class="company-icon">PP</span>
+                    }
                     <span class="list-row-main">
                         <h3>@merchant.CompanyName</h3>
-                        <p>@merchant.Industry · @merchant.BusinessType · @merchant.KycDocuments.Count documents</p>
+                        <p>@(merchant.Industry ?? "Industry not provided") | @merchant.BusinessType | @merchant.KycDocuments.Count documents</p>
                     </span>
                     <StatusBadge Value="merchant.RiskLevel" />
                     <StatusBadge Value="merchant.Status" />
+                    <a class="button secondary" href="/merchants/@merchant.Id">View profile</a>
                     <button class="button primary" @onclick="() => Select(merchant)">Review</button>
                 </div>
             }
@@ -51,14 +59,14 @@
             <div class="modal-body review-body">
                 <section class="grid three">
                     <div class="review-stat"><span>Risk</span><strong>@selected.RiskLevel</strong></div>
-                    <div class="review-stat"><span>Status</span><strong>@selected.Status.ToString().Replace("UnderReview", "Under Review")</strong></div>
+                    <div class="review-stat"><span>Status</span><strong>@FormatStatus(selected.Status)</strong></div>
                     <div class="review-stat"><span>Applied</span><strong>@selected.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy")</strong></div>
                 </section>
 
                 <h3>Primary Contact</h3>
                 @if (selected.Contacts.FirstOrDefault() is { } contact)
                 {
-                    <div class="address-block"><strong>@contact.Name</strong><span>@contact.Position</span><span>@contact.Email · @contact.Phone</span></div>
+                    <div class="address-block"><strong>@contact.Name</strong><span>@(contact.Position ?? "Contact")</span><span>@contact.Email | @(contact.Phone ?? "No phone")</span></div>
                 }
 
                 <h3>Documents</h3>
@@ -70,9 +78,10 @@
                     @foreach (var document in selected.KycDocuments)
                     {
                         <div class="list-row">
-                            <span class="company-icon">▤</span>
-                            <span class="list-row-main"><h3>@document.DocumentName</h3><p>@document.DocumentType.Replace('_', ' ')</p></span>
+                            <span class="company-icon">DOC</span>
+                            <span class="list-row-main"><h3>@document.DocumentName</h3><p>@Humanize(document.DocumentType)</p></span>
                             <StatusBadge Value="document.Status" />
+                            <a class="button secondary" href="/kyc-documents/@document.Id/download">View or download</a>
                         </div>
                     }
                 </div>
@@ -83,7 +92,7 @@
                     @foreach (var review in selected.Reviews.OrderByDescending(x => x.CreatedAtUtc))
                     {
                         <div class="review-history">
-                            <strong>@review.Decision.ToString().Replace("MoreInformationRequired", "More Information Required")</strong>
+                            <strong>@FormatDecision(review.Decision)</strong>
                             <span>@review.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy h:mm tt")</span>
                             <p>@review.Notes</p>
                         </div>
@@ -92,9 +101,9 @@
 
                 <h3>Decision</h3>
                 <div class="decision-grid">
-                    <button class="decision approved @(decision == ReviewDecision.Approved ? "selected" : "")" @onclick="() => decision = ReviewDecision.Approved">✓ Approve</button>
-                    <button class="decision rejected @(decision == ReviewDecision.Rejected ? "selected" : "")" @onclick="() => decision = ReviewDecision.Rejected">× Reject</button>
-                    <button class="decision pending @(decision == ReviewDecision.MoreInformationRequired ? "selected" : "")" @onclick="() => decision = ReviewDecision.MoreInformationRequired">! Request Documents</button>
+                    <button class="decision approved @(decision == ReviewDecision.Approved ? "selected" : "")" @onclick="() => decision = ReviewDecision.Approved">Approve</button>
+                    <button class="decision rejected @(decision == ReviewDecision.Rejected ? "selected" : "")" @onclick="() => decision = ReviewDecision.Rejected">Reject</button>
+                    <button class="decision pending @(decision == ReviewDecision.MoreInformationRequired ? "selected" : "")" @onclick="() => decision = ReviewDecision.MoreInformationRequired">Request Documents</button>
                 </div>
                 <label>Reviewer notes</label>
                 <textarea class="input" rows="4" @bind="notes" placeholder="Explain the decision or documents required..."></textarea>
@@ -169,4 +178,18 @@
 
     private async Task RefreshAsync() =>
         merchants = await MerchantService.ListAsync(null, null, null);
+
+    private static string Humanize(string value)
+    {
+        var text = value.Replace('_', ' ');
+        return char.ToUpperInvariant(text[0]) + text[1..];
+    }
+
+    private static string FormatStatus(MerchantStatus status) =>
+        status == MerchantStatus.UnderReview ? "Under Review" : status.ToString();
+
+    private static string FormatDecision(ReviewDecision decision) =>
+        decision == ReviewDecision.MoreInformationRequired
+            ? "More Information Required"
+            : decision.ToString();
 }
