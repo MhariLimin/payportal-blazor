@@ -7,7 +7,7 @@
 
 <div class="page">
     <header class="page-header">
-        <div><h1>Merchant Applications</h1><p>Review and manage merchant onboarding applications</p></div>
+        <div><h1>Merchant Applications</h1><p>Review and manage merchant onboarding applications.</p></div>
         <span class="muted">@Filtered.Count applications</span>
     </header>
 
@@ -17,7 +17,7 @@
             <option value="">All statuses</option>
             @foreach (var value in Enum.GetValues<MerchantStatus>())
             {
-                <option value="@value">@value.ToString().Replace("UnderReview", "Under Review")</option>
+                <option value="@value">@Format(value.ToString())</option>
             }
         </select>
         <select class="input" @bind="risk">
@@ -25,6 +25,20 @@
             @foreach (var value in Enum.GetValues<RiskLevel>())
             {
                 <option value="@value">@value risk</option>
+            }
+        </select>
+        <select class="input" @bind="businessType">
+            <option value="">All business types</option>
+            @foreach (var option in MerchantOptions.BusinessTypes)
+            {
+                <option value="@option">@option</option>
+            }
+        </select>
+        <select class="input" @bind="industry">
+            <option value="">All industries</option>
+            @foreach (var option in MerchantOptions.Industries)
+            {
+                <option value="@option">@option</option>
             }
         </select>
     </section>
@@ -38,13 +52,20 @@
             @foreach (var merchant in Filtered)
             {
                 <div class="application-row">
-                    <span class="company-icon">▣</span>
+                    @if (!string.IsNullOrWhiteSpace(merchant.LogoStorageName))
+                    {
+                        <img class="company-logo" src="/merchant-logos/@merchant.Id" alt="" />
+                    }
+                    else
+                    {
+                        <span class="company-icon">PP</span>
+                    }
                     <span class="list-row-main">
                         <h3>@merchant.CompanyName</h3>
-                        <p>@merchant.Industry · @merchant.BusinessType · Applied @merchant.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy")</p>
+                        <p>@(merchant.Industry ?? "Industry not provided") | @merchant.BusinessType | Applied @merchant.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy")</p>
                         @if (merchant.Contacts.FirstOrDefault() is { } contact)
                         {
-                            <p>@contact.Name · @contact.Email</p>
+                            <p>@contact.Name | @contact.Email</p>
                         }
                     </span>
                     <StatusBadge Value="merchant.RiskLevel" />
@@ -62,6 +83,8 @@
     private string search = "";
     private string status = "";
     private string risk = "";
+    private string businessType = "";
+    private string industry = "";
 
     private IReadOnlyList<Merchant> Filtered => merchants
         .Where(x => string.IsNullOrWhiteSpace(search)
@@ -69,8 +92,13 @@
             || (x.Industry?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false))
         .Where(x => string.IsNullOrWhiteSpace(status) || x.Status.ToString() == status)
         .Where(x => string.IsNullOrWhiteSpace(risk) || x.RiskLevel.ToString() == risk)
+        .Where(x => string.IsNullOrWhiteSpace(businessType) || x.BusinessType == businessType)
+        .Where(x => string.IsNullOrWhiteSpace(industry) || x.Industry == industry)
         .ToList();
 
     protected override async Task OnInitializedAsync() =>
         merchants = await MerchantService.ListAsync(null, null, null);
+
+    private static string Format(string value) =>
+        value == "UnderReview" ? "Under Review" : value;
 }
