@@ -3,6 +3,7 @@
 @rendermode InteractiveServer
 @attribute [Authorize(Roles = PortalRoles.MerchantOrAdmin)]
 @inject IMerchantService MerchantService
+@inject NavigationManager Navigation
 
 <PageTitle>Merchant profile - PayPortal</PageTitle>
 
@@ -303,10 +304,7 @@ else
                 selectedLogo.Size,
                 stream);
             logoVersion = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            success = true;
-            message = "Company logo updated successfully.";
-            CloseLogoUpload();
-            await RefreshAsync();
+            Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
         }
         catch (Exception exception) when (exception is IOException or InvalidOperationException)
         {

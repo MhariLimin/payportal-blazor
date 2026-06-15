@@ -48,9 +48,12 @@ internal sealed class MerchantService(
         Guid? merchantId,
         CancellationToken cancellationToken = default)
     {
+        Merchant? merchant;
         if (currentUser.IsAdmin && merchantId.HasValue)
         {
-            return await merchants.GetAsync(merchantId.Value, cancellationToken);
+            merchant = await merchants.GetAsync(merchantId.Value, cancellationToken);
+            await SynchronizeDocumentMilestoneAsync(merchant, cancellationToken);
+            return merchant;
         }
 
         var owned = await merchants.GetByOwnerAsync(RequireUser(), cancellationToken);
@@ -59,6 +62,7 @@ internal sealed class MerchantService(
             throw new UnauthorizedAccessException("The merchant is not accessible.");
         }
 
+        await SynchronizeDocumentMilestoneAsync(owned, cancellationToken);
         return owned;
     }
 
@@ -246,6 +250,40 @@ internal sealed class MerchantService(
 
     private static string? Clean(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private async Task SynchronizeDocumentMilestoneAsync(
+        Merchant? merchant,
+        CancellationToken cancellationToken)
+    {
+        if (merchant is null)
+        {
+            return;
+        }
+
+        var requiredTypes = new[]
+        {
+            "business_registration",
+            "tax_certificate",
+            "id_document"
+        };
+        var complete = requiredTypes.All(type =>
+            merchant.KycDocuments.Any(x => x.DocumentType == type));
+        var milestone = merchant.KycMilestones.SingleOrDefault(x => x.Type == "documents");
+        if (!complete || milestone is null || milestone.IsCompleted)
+        {
+            return;
+        }
+
+        milestone.IsCompleted = true;
+        milestone.CompletedAtUtc = DateTime.UtcNow;
+        if (merchant.Status == MerchantStatus.Pending)
+        {
+            merchant.Status = MerchantStatus.UnderReview;
+            merchant.UpdatedAtUtc = DateTime.UtcNow;
+        }
+
+        await merchants.SaveChangesAsync(cancellationToken);
+    }
 
     private string RequireUser() =>
         currentUser.UserId ?? throw new UnauthorizedAccessException("Authentication required.");
