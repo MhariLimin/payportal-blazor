@@ -37,7 +37,7 @@ else
             </article>
             <article class="card">
                 <h2>Approval Funnel</h2>
-                <div class="stat-value">@model.PendingApplications → @model.UnderReview → @model.Approved</div>
+                <div class="stat-value">@model.PendingApplications -> @model.UnderReview -> @model.Approved</div>
                 <p class="muted">Pending to review to approval</p>
             </article>
             <article class="card">
@@ -58,10 +58,17 @@ else
                     @foreach (var merchant in model.Pending)
                     {
                         <a class="list-row" href="/merchants/@merchant.Id">
-                            <span class="company-icon">▣</span>
+                            @if (!string.IsNullOrWhiteSpace(merchant.LogoStorageName))
+                            {
+                                <img class="company-logo" src="/merchant-logos/@merchant.Id" alt="" />
+                            }
+                            else
+                            {
+                                <span class="company-icon">PP</span>
+                            }
                             <span class="list-row-main">
                                 <h3>@merchant.CompanyName</h3>
-                                <p>@merchant.Industry · @merchant.BusinessType</p>
+                                <p>@(merchant.Industry ?? "Industry not provided") | @merchant.BusinessType</p>
                             </span>
                             <StatusBadge Value="merchant.Status" />
                         </a>
@@ -101,9 +108,9 @@ else
 
     private IEnumerable<(string Label, int Value, string Icon)> Stats()
     {
-        yield return ("Total Merchants", model!.TotalMerchants, "▣");
-        yield return ("Pending", model.PendingApplications, "◷");
-        yield return ("Under Review", model.UnderReview, "◉");
-        yield return ("Approved", model.Approved, "✓");
+        yield return ("Total Merchants", model!.TotalMerchants, "TM");
+        yield return ("Pending", model.PendingApplications, "P");
+        yield return ("Under Review", model.UnderReview, "UR");
+        yield return ("Approved", model.Approved, "A");
     }
 }
