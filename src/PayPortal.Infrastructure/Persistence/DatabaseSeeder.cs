@@ -57,6 +57,16 @@ public static class DatabaseSeeder
                     string.Join("; ", result.Errors.Select(x => x.Description)));
             }
         }
+        else if (!await userManager.CheckPasswordAsync(admin, adminPassword))
+        {
+            var resetToken = await userManager.GeneratePasswordResetTokenAsync(admin);
+            var resetResult = await userManager.ResetPasswordAsync(admin, resetToken, adminPassword);
+            if (!resetResult.Succeeded)
+            {
+                throw new InvalidOperationException(
+                    string.Join("; ", resetResult.Errors.Select(x => x.Description)));
+            }
+        }
 
         if (!await userManager.IsInRoleAsync(admin, PortalRoles.Admin))
         {

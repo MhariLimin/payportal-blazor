@@ -4,6 +4,7 @@ param(
     [switch]$SkipRestore,
     [switch]$BuildOnly,
     [switch]$ConfigureAdminSecrets,
+    [switch]$ResetAdminSecrets,
     [ValidateSet("Debug", "Release")]
     [string]$Configuration = "Debug"
 )
@@ -34,8 +35,19 @@ if (-not $SkipDocker) {
         throw "Docker is not available. Install/start Docker Desktop or use -SkipDocker with an existing MySQL 8 server."
     }
 
-    docker info *> $null
-    if ($LASTEXITCODE -ne 0) {
+    $previousErrorActionPreference = $ErrorActionPreference
+    try {
+        # Windows PowerShell can turn harmless native stderr warnings into
+        # terminating errors when ErrorActionPreference is Stop.
+        $ErrorActionPreference = "Continue"
+        docker info *> $null
+        $dockerInfoExitCode = $LASTEXITCODE
+    }
+    finally {
+        $ErrorActionPreference = $previousErrorActionPreference
+    }
+
+    if ($dockerInfoExitCode -ne 0) {
         throw "Docker Desktop is not running."
     }
 
@@ -76,7 +88,7 @@ if (-not $BuildOnly) {
     $hasEmail = $secrets -match "^SeedAdmin:Email\s*="
     $hasPassword = $secrets -match "^SeedAdmin:Password\s*="
 
-    if ($ConfigureAdminSecrets -or -not ($hasEmail -and $hasPassword)) {
+    if ($ConfigureAdminSecrets) {
         Write-Host "Configure the local seeded administrator." -ForegroundColor Cyan
         $email = Read-Host "Admin email"
         $securePassword = Read-Host "Admin password" -AsSecureString
@@ -88,6 +100,24 @@ if (-not $BuildOnly) {
 
         dotnet user-secrets set "SeedAdmin:Email" $email --project $webProject
         dotnet user-secrets set "SeedAdmin:Password" $password --project $webProject
+        $password = $null
+    }
+    elseif ($ResetAdminSecrets -or -not ($hasEmail -and $hasPassword)) {
+        $email = "admin@payportal.local"
+        $randomBytes = [byte[]]::new(18)
+        [System.Security.Cryptography.RandomNumberGenerator]::Fill($randomBytes)
+        $password = [Convert]::ToBase64String($randomBytes) + "aA1!"
+
+        dotnet user-secrets set "SeedAdmin:Email" $email --project $webProject
+        dotnet user-secrets set "SeedAdmin:Password" $password --project $webProject
+
+        Write-Host ""
+        Write-Host "Generated local development administrator:" -ForegroundColor Green
+        Write-Host "  Email:    $email"
+        Write-Host "  Password: $password"
+        Write-Host "Save this password now. It will not be displayed on later runs." -ForegroundColor Yellow
+        Write-Host "Use -ResetAdminSecrets to generate a new local credential." -ForegroundColor DarkGray
+        Write-Host ""
         $password = $null
     }
 }
