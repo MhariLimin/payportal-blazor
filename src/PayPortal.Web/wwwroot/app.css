@@ -86,7 +86,7 @@ h1, h2, h3, strong { font-family: var(--font-heading); }
 .avatar { border-radius: 50%; }
 .avatar.image, .company-logo { object-fit: cover; }
 .user-dropdown {
-    position: absolute; top: calc(100% + 10px); right: 0; width: 250px; overflow: hidden;
+    position: absolute; z-index: 50; top: calc(100% + 10px); right: 0; width: 250px; overflow: hidden;
     padding: 8px; background: var(--surface); border: 1px solid var(--border);
     border-radius: 14px; box-shadow: var(--shadow);
 }
