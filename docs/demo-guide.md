@@ -12,14 +12,19 @@ domain rules from EF Core, Identity, MySQL, file storage, and UI concerns.
    user, Merchant role, company profile, address, contact, and milestones.
 2. Open the dashboard and explain that statistics now come from MySQL rather
    than sample arrays.
-3. Open the merchant profile and show owner-scoped data.
-4. Upload a KYC document and explain private storage, generated filenames,
-   content-type/size validation, and audit activity.
-5. Sign in as Admin, filter applications, and submit a review decision.
-6. Return to the merchant KYC timeline to show reviewer notes and status.
-7. Approve the merchant, create an API key, and emphasize that the secret is
+3. Open the merchant profile, edit company data, and upload a company logo.
+4. Upload all required KYC documents and explain private storage, generated
+   filenames, validation, authorized downloads, and automatic milestone
+   progression into Compliance Review.
+5. Sign in as Admin, filter applications by business type/industry, inspect
+   evidence, and submit a review decision.
+6. Use breadcrumbs to return to the application list, then show the detailed
+   merchant-aware activity feed.
+7. Switch light/dark mode from the account menu and point out that browser
+   preference persists.
+8. Approve the merchant, create an API key, and emphasize that the secret is
    cryptographically generated, hashed at rest, and displayed only once.
-8. Rotate the key to demonstrate revocation and audit behavior.
+9. Rotate the key to demonstrate revocation and audit behavior.
 
 ## Architecture Talking Points
 
@@ -27,6 +32,8 @@ domain rules from EF Core, Identity, MySQL, file storage, and UI concerns.
 - Static SSR is intentionally used for cookie-writing Identity flows.
 - Service-layer authorization prevents cross-merchant access even if a route is
   manipulated.
+- Private KYC and logo files are streamed through authorized service methods
+  rather than exposed from `wwwroot`.
 - EF Core mappings and migrations keep the schema versioned with the code.
 - Infrastructure abstractions allow local KYC storage to be replaced by S3 or
   Azure Blob Storage without changing pages or domain entities.

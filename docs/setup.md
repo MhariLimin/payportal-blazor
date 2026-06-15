@@ -44,10 +44,11 @@ docker version
 .\scripts\run-local.ps1
 ```
 
-On first run, the launcher prompts for administrator credentials and stores
-them through `dotnet user-secrets`. It then starts and waits for MySQL, restores
-packages and tools, builds the solution, and starts the Blazor application at
-`http://localhost:5088`.
+On first run, the launcher generates a strong local administrator password,
+stores it through `dotnet user-secrets`, and displays it once. Later runs reuse
+the saved secrets without asking for credentials. The script then starts and
+waits for MySQL, restores packages and tools, builds the solution, and starts
+the Blazor application at `http://localhost:5088`.
 
 Useful options:
 
@@ -55,13 +56,14 @@ Useful options:
 .\scripts\run-local.ps1 -SkipRestore
 .\scripts\run-local.ps1 -SkipDocker
 .\scripts\run-local.ps1 -ConfigureAdminSecrets
+.\scripts\run-local.ps1 -ResetAdminSecrets
 .\scripts\run-local.ps1 -SkipDocker -SkipRestore -BuildOnly -Configuration Release
 ```
 
-Seed secrets are used when creating an administrator in an empty database.
-Changing the secrets does not mutate an administrator already stored in MySQL.
-Use the password-reset workflow or reset the local database for a new seed
-identity.
+- `-ConfigureAdminSecrets` asks for a specific email and password.
+- `-ResetAdminSecrets` generates a new local credential and synchronizes the
+  existing seeded administrator on the next startup.
+- Passwords remain outside Git in ASP.NET Core User Secrets.
 
 ## Manual User Secret Commands
 

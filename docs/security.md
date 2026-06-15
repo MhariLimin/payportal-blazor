@@ -13,6 +13,15 @@
 - Server-generated names prevent trusting browser filenames.
 - Files are stored under `uploads/kyc`, outside `wwwroot`.
 - Storage paths are canonicalized to prevent traversal.
+- Authorized download endpoints re-check merchant ownership or the Admin role
+  before streaming file content.
+
+## Company Logos
+
+- Logos are limited to PNG and JPEG and to 2 MB.
+- Logo files use generated names under private local storage.
+- Merchant ownership is required to replace a logo; authenticated owners and
+  administrators can view it.
 
 ## API Credentials
 

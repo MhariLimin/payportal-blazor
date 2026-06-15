@@ -7,13 +7,9 @@ Run the application with:
 .\scripts\run-local.ps1
 ```
 
-Default administrator credentials are defined in `.env.local`. The template
-uses:
-
-```text
-Email: admin@payportal.local
-Password: ChangeThis123!
-```
+The first launcher run displays a generated local administrator credential once
+and stores it in ASP.NET Core User Secrets. Use `-ResetAdminSecrets` when a new
+local password is required.
 
 ## Test Data Strategy
 
@@ -39,9 +35,10 @@ Expected: protected pages are unavailable without authentication.
 1. Open `/account/register`.
 2. Submit the empty form.
 3. Confirm required-field validation appears.
-4. Enter company name, business type, tax ID, contact details, address, and a
-   password that satisfies the Identity policy.
-5. Submit the form.
+4. Confirm required fields have red indicators.
+5. Choose business type and industry from the standard dropdown lists.
+6. Enter company, tax, contact, address, and password details.
+7. Submit the form.
 
 Expected:
 
@@ -99,22 +96,25 @@ as document uploads and credential issuance appear in recent activity.
    match registration values.
 3. Confirm application date, status, risk level, and onboarding progress are
    displayed.
-4. Select `Review KYC documents`.
+4. Select `Edit profile`, update company/contact/address fields, and save.
+5. Upload a PNG or JPEG company logo smaller than 2 MB.
+6. Confirm the logo appears on the profile and in the account menu.
+7. Select `View KYC documents`.
 
-Expected: a Merchant can view only its own profile. The quick action opens the
-merchant's KYC page.
-
-Current scope: profile editing is not implemented; the page is read-only.
+Expected: a Merchant can update only its own profile and logo. Admin can inspect
+the profile but cannot edit merchant-owned details.
 
 ## 7. KYC Document Upload
 
 1. Open `KYC Verification`.
 2. Select `Upload Document`.
 3. Choose a document type.
-4. Upload a PDF, PNG, or JPEG smaller than 10 MB.
-5. Confirm the document appears with `Pending` status.
-6. Confirm the total and pending counters update.
-7. Confirm a recent `document uploaded` activity appears on the dashboard.
+4. Upload the three required documents in any order.
+5. Confirm document progress completes and the application moves to Under
+   Review after all required evidence is present.
+6. Confirm Compliance Review remains pending until an administrator acts.
+7. Select `View or download` and confirm the authorized file opens/downloads.
+8. Confirm recent activity identifies the merchant and document type.
 
 Negative checks:
 
@@ -129,8 +129,10 @@ stored outside the public web root with generated storage names.
 
 1. Log out and sign in as the seeded administrator.
 2. Confirm the sidebar shows `Applications` and `Admin Review`.
-3. Confirm it does not show Merchant-only `API Credentials`.
+3. Confirm it does not show Merchant Profile, KYC Verification, or API
+   Credentials.
 4. Open the dashboard and review aggregate statistics and recent activity.
+5. Confirm activity descriptions identify which merchant performed the action.
 
 Expected: Admin sees portal-wide data and Admin-only navigation.
 
@@ -141,9 +143,10 @@ Expected: Admin sees portal-wide data and Admin-only navigation.
 3. Search by industry when populated.
 4. Filter by status.
 5. Filter by risk level.
-6. Combine search, status, and risk filters.
-7. Select `View profile`.
-8. Return and select `Review`.
+6. Filter by business type and industry.
+7. Combine multiple filters.
+8. Select `View profile`.
+9. Return and select `Review`.
 
 Expected: the list updates immediately and links open the selected merchant's
 profile or preselected review dialog.
@@ -154,7 +157,9 @@ profile or preselected review dialog.
 2. Confirm Admin can inspect company, contact, address, application status,
    risk, and onboarding progress.
 3. Open that merchant's KYC page.
-4. Confirm uploaded document metadata and status are visible.
+4. Confirm breadcrumbs and a back button preserve admin navigation context.
+5. Confirm uploaded document metadata and status are visible.
+6. Open or download each uploaded document from the KYC page or review modal.
 
 Expected: Admin can inspect any merchant while Merchant users remain
 owner-scoped.
@@ -258,15 +263,17 @@ Admin checks:
 Expected: route authorization and service-level ownership checks prevent
 cross-role and cross-merchant access.
 
-## Display-Only Elements
+## 17. Branding and Theme
 
-The following visible elements are currently presentation-only:
+1. Confirm PayPortal artwork appears on account and authenticated screens.
+2. Open the user menu from the top-right avatar or company logo.
+3. Switch between Light, Dark, and System themes.
+4. Reload the browser and confirm the selected theme persists.
+5. Confirm logout is available inside the same dropdown.
 
-- The top-bar search placeholder.
-- Profile editing.
-- Email delivery for password reset.
-- Direct document viewing/downloading.
-- Webhook management.
+## Remaining Development-Only Behavior
 
-Do not report these as functional workflows until their services and UI actions
-are implemented.
+- Password reset links are displayed instead of delivered by email.
+- Webhook management is not implemented.
+- KYC files use private local disk storage rather than production object
+  storage and malware scanning.
