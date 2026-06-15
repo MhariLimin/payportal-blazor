@@ -55,6 +55,22 @@ app.MapGet("/merchant-logos/{merchantId:guid}", async (
         : Results.File(file.Stream, file.ContentType);
 }).RequireAuthorization(policy => policy.RequireRole("Merchant", "Admin"));
 
+app.MapGet("/merchant-logos/current", async (
+    IMerchantService merchantService,
+    CancellationToken cancellationToken) =>
+{
+    var merchant = await merchantService.GetAccessibleAsync(null, cancellationToken);
+    if (merchant is null)
+    {
+        return Results.NotFound();
+    }
+
+    var file = await merchantService.OpenLogoAsync(merchant.Id, cancellationToken);
+    return file is null
+        ? Results.NotFound()
+        : Results.File(file.Stream, file.ContentType);
+}).RequireAuthorization(policy => policy.RequireRole("Merchant"));
+
 app.MapGet("/kyc-documents/{documentId:guid}/download", async (
     Guid documentId,
     IKycService kycService,

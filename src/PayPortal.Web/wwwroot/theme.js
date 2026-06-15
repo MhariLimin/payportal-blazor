@@ -10,12 +10,17 @@
     }
 
     function apply(theme) {
-        document.documentElement.dataset.theme = resolve(theme);
-        document.documentElement.style.colorScheme = resolve(theme);
+        const resolvedTheme = resolve(theme);
+        document.documentElement.dataset.theme = resolvedTheme;
+        document.documentElement.dataset.themePreference = theme;
+        document.documentElement.style.colorScheme = resolvedTheme;
     }
 
-    const savedTheme = localStorage.getItem(storageKey) || "system";
-    apply(savedTheme);
+    function applySavedTheme() {
+        apply(localStorage.getItem(storageKey) || "system");
+    }
+
+    applySavedTheme();
 
     window.payPortalTheme = {
         set: function (theme) {
@@ -28,5 +33,22 @@
         if ((localStorage.getItem(storageKey) || "system") === "system") {
             apply("system");
         }
+    });
+
+    window.addEventListener("load", function () {
+        if (window.Blazor) {
+            window.Blazor.addEventListener("enhancedload", applySavedTheme);
+        }
+    });
+
+    new MutationObserver(function () {
+        const savedTheme = localStorage.getItem(storageKey) || "system";
+        if (document.documentElement.dataset.themePreference !== savedTheme ||
+            document.documentElement.dataset.theme !== resolve(savedTheme)) {
+            apply(savedTheme);
+        }
+    }).observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["data-theme", "data-theme-preference"]
     });
 })();
