@@ -1,22 +1,27 @@
 <nav class="nav-menu">
     <NavLink href="/" Match="NavLinkMatch.All"><span class="nav-icon">D</span> Dashboard</NavLink>
     <AuthorizeView Roles="@PortalRoles.Admin">
-        <NavLink href="/applications"><span class="nav-icon">A</span> Applications</NavLink>
+        <details class="nav-group" open>
+            <summary><span class="nav-icon">O</span> Onboarding</summary>
+            <NavLink href="/applications"><span class="nav-icon">A</span> Applications</NavLink>
+            <NavLink href="/document-requests"><span class="nav-icon">Q</span> Document Requests</NavLink>
+        </details>
         <NavLink href="/merchant-directory"><span class="nav-icon">M</span> Merchant Directory</NavLink>
         <NavLink href="/activity"><span class="nav-icon">L</span> Activity</NavLink>
-        <NavLink href="/risk-rules"><span class="nav-icon">R</span> Risk Rules</NavLink>
-        <NavLink href="/document-requests"><span class="nav-icon">Q</span> Document Requests</NavLink>
-        <NavLink href="/merchant-timeline"><span class="nav-icon">T</span> Timeline</NavLink>
-        <NavLink href="/api-usage"><span class="nav-icon">U</span> API Usage</NavLink>
-        <NavLink href="/admin-settings"><span class="nav-icon">S</span> Admin Settings</NavLink>
-        <NavLink href="/reports"><span class="nav-icon">R</span> Reports</NavLink>
+        <details class="nav-group">
+            <summary><span class="nav-icon">M</span> Monitoring</summary>
+            <NavLink href="/risk-rules"><span class="nav-icon">R</span> Risk Rules</NavLink>
+            <NavLink href="/api-usage"><span class="nav-icon">U</span> API Usage</NavLink>
+            <NavLink href="/reports"><span class="nav-icon">R</span> Reports</NavLink>
+        </details>
     </AuthorizeView>
     <AuthorizeView Roles="@PortalRoles.Merchant">
         <NavLink href="/kyc"><span class="nav-icon">K</span> KYC Verification</NavLink>
-        <NavLink href="/api-credentials"><span class="nav-icon">C</span> API Credentials</NavLink>
-        <NavLink href="/document-requests"><span class="nav-icon">Q</span> Document Requests</NavLink>
-        <NavLink href="/merchant-activity"><span class="nav-icon">A</span> My Activity</NavLink>
-        <NavLink href="/merchant-timeline"><span class="nav-icon">T</span> Timeline</NavLink>
-        <NavLink href="/api-usage"><span class="nav-icon">U</span> API Usage</NavLink>
+        <NavLink href="/merchant-activity"><span class="nav-icon">A</span> Activity</NavLink>
+        <details class="nav-group">
+            <summary><span class="nav-icon">A</span> API</summary>
+            <NavLink href="/api-credentials"><span class="nav-icon">C</span> API Credentials</NavLink>
+            <NavLink href="/api-usage"><span class="nav-icon">U</span> API Usage</NavLink>
+        </details>
     </AuthorizeView>
 </nav>

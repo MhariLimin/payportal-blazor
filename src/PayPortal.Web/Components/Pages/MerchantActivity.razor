@@ -3,16 +3,16 @@
 @attribute [Authorize(Roles = PortalRoles.Merchant)]
 @inject IActivityService ActivityService
 
-<PageTitle>My Activity - PayPortal</PageTitle>
+<PageTitle>Activity - PayPortal</PageTitle>
 
 <div class="page">
     <header class="page-header">
-        <div><h1>My Activity</h1><p>Your merchant events plus administrator actions that affect your application.</p></div>
+        <div><h1>Activity</h1><p>Your merchant events plus administrator actions that affect your application.</p></div>
         <span class="muted">@items.Count events</span>
     </header>
 
     <section class="card flush">
-        <div class="card-title"><h2>Activity Stream</h2><a href="/merchant-timeline">Open Timeline</a></div>
+        <div class="card-title"><h2>Activity Stream</h2><span class="muted">Newest events first</span></div>
         <div class="list">
             @if (items.Count == 0)
             {
@@ -40,5 +40,5 @@
         items = await ActivityService.ListAsync(new ActivityLogFilter(null, null, null, null, null), 100);
 
     private static string ActivityUrl(ActivityLogItem item) =>
-        item.Action.Contains("document", StringComparison.OrdinalIgnoreCase) ? "/document-requests" : "/merchant/profile";
+        item.Action.Contains("document", StringComparison.OrdinalIgnoreCase) ? "/kyc" : "/merchant/profile";
 }

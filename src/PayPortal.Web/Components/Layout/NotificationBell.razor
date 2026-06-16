@@ -5,7 +5,9 @@
     <Authorized>
         <div class="notification-wrap">
             <button class="notification-button" type="button" aria-label="Open notifications" @onclick="OpenAsync">
-                <span>N</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 22a2.5 2.5 0 0 0 2.4-1.8H9.6A2.5 2.5 0 0 0 12 22Zm7-6.5-1.7-2V9a5.3 5.3 0 0 0-4.1-5.2V3a1.2 1.2 0 0 0-2.4 0v.8A5.3 5.3 0 0 0 6.7 9v4.5l-1.7 2A1.5 1.5 0 0 0 6.2 18h11.6a1.5 1.5 0 0 0 1.2-2.5Z" />
+                </svg>
                 @if (ActionRequiredCount > 0)
                 {
                     <strong>@ActionRequiredCount</strong>
@@ -15,52 +17,34 @@
 
         @if (showModal)
         {
-            <div class="modal-backdrop">
-                <section class="modal notification-modal">
+            <div class="modal-backdrop notification-backdrop" @onclick="Close">
+                <section class="modal notification-modal" @onclick:stopPropagation="true">
                     <div class="card-title">
                         <div>
                             <h2>Notifications</h2>
-                            <span class="muted">@items.Count merchant updates</span>
+                            <span class="muted">@ActionRequiredCount action needed</span>
                         </div>
-                        <button class="icon-button" @onclick="() => showModal = false">Close</button>
+                        <button class="icon-button" @onclick="Close">Close</button>
                     </div>
-                    <div class="modal-body grid two">
-                        <article>
-                            <h3>Action Required</h3>
-                            <div class="list compact-list bordered">
-                                @foreach (var item in items.Where(IsActionRequired).Take(6))
-                                {
-                                    <a class="list-row" href="@ActivityUrl(item)">
-                                        <span class="timeline-dot"></span>
-                                        <span class="list-row-main"><h3>@item.Title</h3><p>@item.Description</p></span>
-                                    </a>
-                                }
-                                @if (!items.Any(IsActionRequired))
-                                {
-                                    <div class="empty-state muted">No immediate action is required.</div>
-                                }
-                            </div>
-                        </article>
-                        <article>
-                            <h3>Recent Updates</h3>
-                            <div class="list compact-list bordered">
-                                @foreach (var item in items.Take(8))
-                                {
-                                    <a class="list-row" href="@ActivityUrl(item)">
-                                        <span class="timeline-dot complete"></span>
-                                        <span class="list-row-main">
-                                            <h3>@item.Title</h3>
-                                            <p>@item.Description</p>
-                                            <small class="muted">@item.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy h:mm tt")</small>
-                                        </span>
-                                    </a>
-                                }
-                            </div>
-                        </article>
-                    </div>
-                    <div class="modal-actions">
-                        <a class="button secondary" href="/merchant-activity">Open Activity</a>
-                        <button class="button primary" @onclick="() => showModal = false">Done</button>
+                    <div class="modal-body">
+                        <h3>Action Required</h3>
+                        <div class="list compact-list bordered">
+                            @foreach (var item in items.Where(IsActionRequired).Take(8))
+                            {
+                                <a class="list-row" href="@ActivityUrl(item)">
+                                    <span class="timeline-dot"></span>
+                                    <span class="list-row-main">
+                                        <h3>@item.Title</h3>
+                                        <p>@item.Description</p>
+                                        <small class="muted">@item.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy h:mm tt")</small>
+                                    </span>
+                                </a>
+                            }
+                            @if (!items.Any(IsActionRequired))
+                            {
+                                <div class="empty-state muted">No immediate action is required.</div>
+                            }
+                        </div>
                     </div>
                 </section>
             </div>
@@ -82,6 +66,8 @@
         showModal = true;
     }
 
+    private void Close() => showModal = false;
+
     private async Task LoadAsync() =>
         items = await ActivityService.ListAsync(new ActivityLogFilter(null, null, null, null, null), 30);
 
@@ -89,5 +75,5 @@
         item.Action is "application_moreinformationrequired" or "kyc_document_rejected";
 
     private static string ActivityUrl(ActivityLogItem item) =>
-        item.Action.Contains("document", StringComparison.OrdinalIgnoreCase) ? "/document-requests" : "/merchant/profile";
+        item.Action.Contains("document", StringComparison.OrdinalIgnoreCase) ? "/kyc" : "/merchant/profile";
 }

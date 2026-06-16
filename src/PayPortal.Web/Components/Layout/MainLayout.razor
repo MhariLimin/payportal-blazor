@@ -10,20 +10,8 @@
             <span class="context-label">Merchant operations</span>
             <span class="context-status">Secure workspace</span>
         </div>
-        <AuthorizeView Roles="@PortalRoles.Admin">
-            <Authorized>
-                <div class="topbar-actions">
-                    <a class="button secondary" href="/applications">Review Queue</a>
-                    <a class="button secondary" href="/reports">Reports</a>
-                </div>
-            </Authorized>
-        </AuthorizeView>
         <AuthorizeView Roles="@PortalRoles.Merchant">
             <Authorized>
-                <div class="topbar-actions">
-                    <a class="button secondary" href="/kyc">Upload Documents</a>
-                    <a class="button secondary" href="/api-credentials">API Access</a>
-                </div>
                 <NotificationBell />
             </Authorized>
         </AuthorizeView>
@@ -33,18 +21,19 @@
         <div class="sidebar-label">Workspace</div>
         <NavMenu />
         <div class="sidebar-card">
-            <strong>Quick workspace</strong>
-            <span>Use the focused pages below for review status, activity, and settings.</span>
+            <strong>Next best action</strong>
             <AuthorizeView Roles="@PortalRoles.Admin">
                 <Authorized>
-                    <a href="/risk-rules">Risk Rules</a>
-                    <a href="/admin-settings">Admin Settings</a>
+                    <span>Start with Applications for decisions, then use Activity to audit changes.</span>
+                    <a href="/applications">Open Applications</a>
+                    <a href="/activity">Review Activity</a>
                 </Authorized>
             </AuthorizeView>
             <AuthorizeView Roles="@PortalRoles.Merchant">
                 <Authorized>
-                    <a href="/document-requests">Document Requests</a>
-                    <a href="/merchant-timeline">Timeline</a>
+                    <span>Complete your KYC checklist first. API access unlocks after approval.</span>
+                    <a href="/kyc">Open KYC Checklist</a>
+                    <a href="/merchant/profile">Update Profile</a>
                 </Authorized>
             </AuthorizeView>
         </div>

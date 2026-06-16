@@ -35,9 +35,16 @@
                     {
                         <a class="dropdown-link" role="menuitem" href="/merchant/profile">Profile</a>
                     }
-                    <button type="button" role="menuitem" @onclick='() => SetThemeAsync("light")'>Light mode</button>
-                    <button type="button" role="menuitem" @onclick='() => SetThemeAsync("dark")'>Dark mode</button>
-                    <button type="button" role="menuitem" @onclick='() => SetThemeAsync("system")'>Use system theme</button>
+                    @if (auth.User.IsInRole(PortalRoles.Admin))
+                    {
+                        <a class="dropdown-link" role="menuitem" href="/admin-settings">Admin Settings</a>
+                    }
+                    <div class="dropdown-section" role="group" aria-label="Themes">
+                        <span>Themes</span>
+                        <button type="button" role="menuitem" @onclick='() => SetThemeAsync("light")'>Light mode</button>
+                        <button type="button" role="menuitem" @onclick='() => SetThemeAsync("dark")'>Dark mode</button>
+                        <button type="button" role="menuitem" @onclick='() => SetThemeAsync("system")'>Use system theme</button>
+                    </div>
                     <form action="/account/logout" method="post">
                         <AntiforgeryToken />
                         <button class="logout-action" type="submit">Log out</button>

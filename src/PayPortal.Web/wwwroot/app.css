@@ -114,12 +114,15 @@ h1, h2, h3, strong { font-family: var(--font-heading); }
 .dropdown-link { display: block; padding: 10px 11px; color: var(--text); border-radius: 8px; font-weight: 700; }
 .user-dropdown button:hover, .dropdown-link:hover { background: var(--surface-soft); }
 .user-dropdown .logout-action { margin-top: 4px; color: var(--danger); border-top: 1px solid var(--border); border-radius: 0 0 8px 8px; }
+.dropdown-section { display: grid; gap: 3px; margin-top: 6px; padding-top: 7px; border-top: 1px solid var(--border); }
+.dropdown-section > span { padding: 0 11px; color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
 .notification-wrap { position: relative; }
 .notification-button {
     position: relative; display: grid; place-items: center; width: 38px; height: 38px;
     color: var(--brand-strong); background: var(--surface); border: 1px solid var(--border);
     border-radius: 50%; cursor: pointer; font-weight: 800;
 }
+.notification-button svg { width: 18px; height: 18px; fill: currentColor; }
 .notification-button:hover { background: var(--surface-soft); }
 .notification-button strong {
     position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px;
@@ -134,10 +137,16 @@ h1, h2, h3, strong { font-family: var(--font-heading); }
 }
 .sidebar-label { padding: 0 12px 10px; color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
 .nav-menu { display: grid; gap: 6px; }
-.nav-menu a { display: flex; gap: 9px; align-items: center; padding: 8px 9px; color: var(--muted); font-size: 12px; font-weight: 700; border-radius: 9px; }
-.nav-menu a:hover { color: var(--text); background: var(--surface-soft); }
+.nav-menu a, .nav-group summary { display: flex; gap: 9px; align-items: center; padding: 8px 9px; color: var(--muted); font-size: 12px; font-weight: 700; border-radius: 9px; }
+.nav-menu a:hover, .nav-group summary:hover { color: var(--text); background: var(--surface-soft); }
 .nav-menu a.active { color: var(--brand-strong); background: color-mix(in srgb, var(--brand) 12%, var(--surface)); }
 .nav-icon { display: grid; place-items: center; width: 27px; height: 27px; border-radius: 8px; color: inherit; background: color-mix(in srgb, currentColor 10%, transparent); font-size: 11px; }
+.nav-group { display: grid; gap: 4px; }
+.nav-group summary { cursor: pointer; list-style: none; }
+.nav-group summary::-webkit-details-marker { display: none; }
+.nav-group summary::after { content: "v"; margin-left: auto; color: var(--muted); font-size: 10px; }
+.nav-group[open] summary::after { content: "^"; }
+.nav-group a { margin-left: 17px; padding-left: 8px; }
 .sidebar-card { display: grid; gap: 7px; margin-top: auto; padding: 15px; color: #d8f5ff; background: linear-gradient(145deg, #092746, #075d83); border-radius: 13px; }
 .sidebar-card span { color: #a9cedd; font-size: 12px; }
 .sidebar-card a { color: #fff; padding: 7px 9px; background: rgb(255 255 255 / 10%); border-radius: 8px; font-size: 12px; font-weight: 750; }
@@ -261,6 +270,9 @@ label { display: block; margin: 12px 0 5px; color: var(--text); font-size: 12px;
 .document-upload { display: flex; align-items: center; gap: 10px; margin-top: 8px; padding: 12px; background: var(--surface-soft); border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); border-radius: 10px; }
 .document-upload small { display: block; margin-top: 2px; }
 .document-slot { margin-top: 8px; padding: 11px 12px; background: var(--surface-soft); border: 1px dashed color-mix(in srgb, var(--border) 70%, transparent); border-radius: 9px; font-size: 11px; }
+.document-slot .button { margin-left: 8px; }
+.rejected-document { border-color: color-mix(in srgb, var(--danger) 35%, var(--border)); background: color-mix(in srgb, var(--danger) 8%, var(--surface-soft)); }
+.rejected-document .list-row-main > strong { text-decoration: line-through; color: var(--danger); }
 .readiness-list { display: grid; gap: 8px; margin-top: 10px; }
 .readiness-list div { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 10px; background: var(--surface-soft); border: 1px solid color-mix(in srgb, var(--border) 65%, transparent); border-radius: 9px; }
 .readiness-list strong { font-size: 11px; }
@@ -278,7 +290,8 @@ label { display: block; margin: 12px 0 5px; color: var(--text); font-size: 12px;
 .credential-heading p { margin-top: 3px; color: var(--muted); font-size: 12px; }
 .permission-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .review-modal { width: min(100%, 860px); max-height: 92vh; }
-.notification-modal { width: min(100%, 880px); max-height: 92vh; overflow-y: auto; }
+.notification-backdrop { align-items: flex-start; overflow-y: auto; padding-top: 78px; }
+.notification-modal { width: min(100%, 620px); max-height: calc(100vh - 110px); overflow-y: auto; }
 .review-body { max-height: 68vh; overflow-y: auto; }
 .review-stat { display: grid; gap: 4px; padding: 14px; background: var(--surface-soft); border-radius: 9px; }
 .review-stat span { color: var(--muted); font-size: 11px; text-transform: uppercase; }
@@ -291,6 +304,13 @@ label { display: block; margin: 12px 0 5px; color: var(--text); font-size: 12px;
 .decision.approved.selected { color: var(--success); border-color: var(--success); background: color-mix(in srgb, var(--success) 10%, var(--surface)); }
 .decision.rejected.selected { color: var(--danger); border-color: var(--danger); background: color-mix(in srgb, var(--danger) 10%, var(--surface)); }
 .decision.pending.selected { color: var(--warning); border-color: var(--warning); background: color-mix(in srgb, var(--warning) 10%, var(--surface)); }
+.request-group { border-top: 1px solid color-mix(in srgb, var(--border) 62%, transparent); }
+.request-group:first-child { border-top: 0; }
+.request-group > summary { display: flex; align-items: center; gap: 10px; padding: 12px 14px; cursor: pointer; list-style: none; }
+.request-group > summary::-webkit-details-marker { display: none; }
+.request-group > summary:hover { background: var(--surface-soft); }
+.request-group .list { border-top: 1px solid color-mix(in srgb, var(--border) 50%, transparent); background: var(--surface-soft); }
+.request-group .list-row { margin-left: 32px; background: var(--surface); }
 
 @media (max-width: 1100px) {
     .filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
