@@ -86,7 +86,7 @@ else
                 @if (model.CurrentMerchant is { } merchant)
                 {
                     <header class="page-header">
-                        <div><h1>Merchant Dashboard</h1><p>@merchant.CompanyName onboarding progress and next actions.</p></div>
+                        <div><h1>Merchant Dashboard</h1><p>@merchant.CompanyName account readiness, review status, and operational access.</p></div>
                         <StatusBadge Value="merchant.Status" />
                     </header>
 
@@ -102,6 +102,16 @@ else
                     </section>
 
                     <section class="grid two">
+                        <article class="card">
+                            <h2>Readiness Summary</h2>
+                            <div class="readiness-list">
+                                <div><strong>Profile</strong><span>@(ProfileComplete(merchant) ? "Saved and ready" : "Review and save your profile")</span></div>
+                                <div><strong>Required evidence</strong><span>@RequiredDocumentCount(merchant)/3 uploaded</span></div>
+                                <div><strong>Review stage</strong><span>@ReviewStage(merchant)</span></div>
+                                <div><strong>API access</strong><span>@(merchant.Status == MerchantStatus.Approved ? "Available" : "Locked until approval")</span></div>
+                            </div>
+                        </article>
+
                         <article class="card flush">
                             <div class="card-title"><h2>Next Steps</h2><span class="muted">@NextStep(merchant)</span></div>
                             <div class="list">
@@ -117,9 +127,11 @@ else
                                 }
                             </div>
                         </article>
+                    </section>
 
+                    <section class="grid two">
                         <article class="card flush">
-                            <div class="card-title"><h2>Documents</h2><a href="/kyc">Open KYC</a></div>
+                            <div class="card-title"><h2>Latest Evidence</h2><a href="/kyc">Open KYC Workspace</a></div>
                             <div class="list">
                                 @foreach (var document in merchant.KycDocuments.OrderByDescending(x => x.CreatedAtUtc).Take(4))
                                 {
@@ -135,16 +147,17 @@ else
                                 }
                             </div>
                         </article>
-                    </section>
 
-                    <section class="grid two">
                         <article class="card">
-                            <h2>Account Readiness</h2>
-                            <p class="muted">API credentials become available after an administrator approves the application.</p>
+                            <h2>Operational Access</h2>
+                            <p class="muted">@AccessMessage(merchant)</p>
                             <a class="button primary" href="@(merchant.Status == MerchantStatus.Approved ? "/api-credentials" : "/kyc")">
                                 @(merchant.Status == MerchantStatus.Approved ? "Manage API Credentials" : "Continue Verification")
                             </a>
                         </article>
+                    </section>
+
+                    <section class="grid two">
                         @RecentActivityPanel()
                     </section>
                 }
@@ -185,6 +198,29 @@ else
         merchant.KycMilestones.Count == 0
             ? 0
             : merchant.KycMilestones.Count(x => x.IsCompleted) * 100 / merchant.KycMilestones.Count;
+
+    private static bool ProfileComplete(Merchant merchant) =>
+        merchant.KycMilestones.Any(x => x.Type == "profile" && x.IsCompleted);
+
+    private static int RequiredDocumentCount(Merchant merchant)
+    {
+        var required = new[] { "business_registration", "tax_certificate", "id_document" };
+        return required.Count(type => merchant.KycDocuments.Any(x => x.DocumentType == type));
+    }
+
+    private static string ReviewStage(Merchant merchant) =>
+        merchant.Status switch
+        {
+            MerchantStatus.UnderReview => "Admin compliance review",
+            MerchantStatus.Approved => "Approved",
+            MerchantStatus.Rejected => "Rejected",
+            _ => RequiredDocumentCount(merchant) == 3 ? "Ready for admin review" : "Waiting for required evidence"
+        };
+
+    private static string AccessMessage(Merchant merchant) =>
+        merchant.Status == MerchantStatus.Approved
+            ? "Your merchant account is approved. You can create sandbox or production API credentials."
+            : "API credentials stay locked until an administrator approves the compliance review.";
 
     private static string NextStep(Merchant merchant) =>
         merchant.KycMilestones.OrderBy(x => x.CreatedAtUtc).FirstOrDefault(x => !x.IsCompleted)?.Title

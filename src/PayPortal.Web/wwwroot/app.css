@@ -224,7 +224,7 @@ label { display: block; margin: 12px 0 5px; color: var(--text); font-size: 12px;
 .requirements { margin-top: 16px; }
 .requirement { display: flex; align-items: center; gap: 10px; padding: 14px; background: var(--surface-soft); border: 1px solid var(--border); border-radius: 9px; }
 .requirement p { margin: 3px 0 0; font-size: 12px; }
-.requirement-state { display: grid; place-items: center; min-width: 34px; height: 26px; color: var(--brand-strong); background: color-mix(in srgb, var(--brand) 12%, var(--surface)); border-radius: 8px; font-size: 10px; font-weight: 800; }
+.requirement-state { display: grid; place-items: center; min-width: 68px; height: 26px; color: var(--brand-strong); background: color-mix(in srgb, var(--brand) 12%, var(--surface)); border-radius: 8px; font-size: 10px; font-weight: 800; }
 .workflow-explainer { border-left: 4px solid var(--brand); }
 .workflow-explainer p { margin: 6px 0 0; color: var(--muted); }
 .stat-card { min-height: 104px; }
@@ -243,6 +243,10 @@ label { display: block; margin: 12px 0 5px; color: var(--text); font-size: 12px;
 .document-upload { display: flex; align-items: center; gap: 10px; margin-top: 8px; padding: 12px; background: var(--surface-soft); border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); border-radius: 10px; }
 .document-upload small { display: block; margin-top: 2px; }
 .document-slot { margin-top: 8px; padding: 11px 12px; background: var(--surface-soft); border: 1px dashed color-mix(in srgb, var(--border) 70%, transparent); border-radius: 9px; font-size: 11px; }
+.readiness-list { display: grid; gap: 8px; margin-top: 10px; }
+.readiness-list div { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 10px; background: var(--surface-soft); border: 1px solid color-mix(in srgb, var(--border) 65%, transparent); border-radius: 9px; }
+.readiness-list strong { font-size: 11px; }
+.readiness-list span { color: var(--muted); font-size: 11px; text-align: right; }
 
 .modal-backdrop { position: fixed; z-index: 100; inset: 0; display: grid; place-items: center; padding: 20px; background: rgb(2 12 24 / 68%); backdrop-filter: blur(5px); }
 .modal { width: min(100%, 570px); overflow: hidden; background: var(--surface); border: 1px solid var(--border); border-radius: 15px; box-shadow: 0 30px 80px rgb(0 0 0 / 32%); }

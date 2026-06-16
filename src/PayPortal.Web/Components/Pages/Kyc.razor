@@ -26,7 +26,7 @@ else
         <header class="page-header">
             <div>
                 <h1>KYC Verification</h1>
-                <p>@merchant.CompanyName | Document verification status</p>
+                <p>@merchant.CompanyName | Evidence workspace for required documents and reviewer decisions</p>
             </div>
             <div class="header-actions">
                 @if (MerchantId.HasValue)
@@ -42,6 +42,24 @@ else
         <section class="card workflow-explainer">
             <strong>How verification works</strong>
             <p>First review and save the company profile. Then upload the required documents. After all required evidence is present, the application moves to Compliance Review, where an administrator checks the company information and files before approving or requesting changes.</p>
+        </section>
+
+        <section class="grid three">
+            <article class="card">
+                <h2>Required Evidence</h2>
+                <div class="stat-value">@RequiredDocumentCount()/3</div>
+                <p class="muted">Required categories uploaded.</p>
+            </article>
+            <article class="card">
+                <h2>Review Outcome</h2>
+                <div class="stat-value">@merchant.KycDocuments.Count(x => x.Status == DocumentStatus.Verified)</div>
+                <p class="muted">Documents verified by an administrator.</p>
+            </article>
+            <article class="card">
+                <h2>Action Needed</h2>
+                <div class="stat-value">@MissingRequiredCount()</div>
+                <p class="muted">Required categories still missing.</p>
+            </article>
         </section>
 
         <section class="grid stats">
@@ -263,13 +281,28 @@ else
                 _ => "Complete this onboarding step."
             };
 
+    private int RequiredDocumentCount()
+    {
+        var required = Requirements.Where(x => x.Required).Select(x => x.Type).ToArray();
+        return required.Count(type => merchant!.KycDocuments.Any(x => x.DocumentType == type));
+    }
+
+    private int MissingRequiredCount() =>
+        Requirements.Count(x => x.Required && !merchant!.KycDocuments.Any(document => document.DocumentType == x.Type));
+
     private string RequirementState(string type)
     {
         var document = merchant!.KycDocuments
             .Where(x => x.DocumentType == type)
             .OrderByDescending(x => x.CreatedAtUtc)
             .FirstOrDefault();
-        return document?.Status == DocumentStatus.Verified ? "OK" : document is null ? "!" : "...";
+        return document?.Status switch
+        {
+            DocumentStatus.Verified => "Verified",
+            DocumentStatus.Rejected => "Rejected",
+            DocumentStatus.Pending => "Pending",
+            _ => "Missing"
+        };
     }
 
     private static string Humanize(string value)
