@@ -23,3 +23,6 @@
 11. `resolved/11-kyc-admin-workflow.md`
 12. `resolved/12-branding-theme-and-ui.md`
 13. `resolved/13-feedback-2-dashboard-and-kyc.md`
+14. `resolved/14-feedback-3-ui-and-admin-pages.md`
+15. `resolved/15-feedback-3-review-actions.md`
+16. `resolved/16-feedback-3-activity-notifications-audit.md`

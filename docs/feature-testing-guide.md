@@ -129,7 +129,8 @@ stored outside the public web root with generated storage names.
 ## 8. Administrator Dashboard and Navigation
 
 1. Log out and sign in as the seeded administrator.
-2. Confirm the sidebar shows `Applications` and `Compliance Queue`.
+2. Confirm the sidebar shows `Applications`, `Merchant Directory`, and
+   `Activity`.
 3. Confirm it does not show Merchant Profile, KYC Verification, or API
    Credentials.
 4. Open the dashboard and review aggregate statistics, funnel bars, decision
@@ -138,9 +139,9 @@ stored outside the public web root with generated storage names.
 
 Expected: Admin sees portal-wide data and Admin-only navigation.
 
-## 9. Application Search and Filters
+## 9. Merchant Directory Search and Filters
 
-1. Open `Applications`.
+1. Open `Merchant Directory`.
 2. Search by a full or partial company name.
 3. Search by industry when populated.
 4. Filter by status.
@@ -148,14 +149,14 @@ Expected: Admin sees portal-wide data and Admin-only navigation.
 6. Filter by business type and industry.
 7. Combine multiple filters.
 8. Select `View profile`.
-9. Return and select `Review` to open that merchant in the Compliance Queue.
+9. Return and select `Review` to open that merchant in Applications.
 
 Expected: the list updates immediately and links open the selected merchant's
 profile or preselected compliance decision dialog.
 
 ## 10. Admin Merchant and KYC Inspection
 
-1. From Applications, open a merchant profile.
+1. From Merchant Directory, open a merchant profile.
 2. Confirm Admin can inspect company, contact, address, application status,
    risk, and onboarding progress.
 3. Open that merchant's KYC page.
@@ -168,7 +169,7 @@ owner-scoped.
 
 ## 11. Request Additional Documents
 
-1. Open `Compliance Queue`.
+1. Open `Applications`.
 2. Select Merchant C.
 3. Select `Request Documents`.
 4. Enter specific reviewer notes.
@@ -185,7 +186,7 @@ Negative check: submit without reviewer notes and confirm validation blocks it.
 
 ## 12. Reject an Application
 
-1. Open `Compliance Queue`.
+1. Open `Applications`.
 2. Select Merchant B.
 3. Select `Reject`.
 4. Enter a rejection explanation and submit.
@@ -201,7 +202,7 @@ Expected:
 
 ## 13. Approve an Application
 
-1. Open `Compliance Queue`.
+1. Open `Applications`.
 2. Select Merchant A.
 3. Select `Approve`.
 4. Enter approval notes and submit.
@@ -259,7 +260,7 @@ Merchant checks:
 Admin checks:
 
 1. Sign in as Admin.
-2. Confirm Applications and Compliance Queue are available.
+2. Confirm Applications, Merchant Directory, and Activity are available.
 3. Confirm Admin can inspect multiple merchant records.
 
 Expected: route authorization and service-level ownership checks prevent
@@ -272,6 +273,35 @@ cross-role and cross-merchant access.
 3. Switch between Light, Dark, and System themes.
 4. Reload the browser and confirm the selected theme persists.
 5. Confirm logout is available inside the same dropdown.
+
+## 18. Admin Document Review and Compliance Review
+
+1. Sign in as Admin and open `Applications`.
+2. Select a merchant with uploaded KYC evidence.
+3. Use `Verify` on one document.
+4. Enter reviewer notes and use `Reject` on another document.
+5. Enter reviewer notes and select `Complete Compliance Review`.
+6. Open the merchant KYC page and confirm milestones and document statuses.
+
+Expected: document statuses update independently from final approval, and
+Compliance Review can be completed before the final approve/reject decision.
+
+## 19. Activity, Notifications, and Audit Logs
+
+Admin checks:
+
+1. Open `Activity`.
+2. Filter by merchant, actor text, action type, and date range.
+3. Confirm dashboard funnel/chart links open `Merchant Directory` with matching
+   query filters.
+4. Open a merchant profile and review `Application Audit Log`.
+
+Merchant checks:
+
+1. Sign in as a Merchant.
+2. Open `Notifications`.
+3. Confirm only that merchant's requests, review updates, and next actions are
+   listed.
 
 ## Remaining Development-Only Behavior
 

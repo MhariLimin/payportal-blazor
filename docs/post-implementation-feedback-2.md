@@ -7,9 +7,9 @@ This document maps the second feedback pass to the implemented behavior.
    and dashboard metrics were reduced so more content fits on screen.
 3. **Merchant dashboard:** Merchant users now see onboarding progress, next
    steps, recent documents, account readiness, and merchant-scoped activity.
-4. **Admin pages:** Applications is now positioned as the searchable merchant
-   directory. Admin Review was renamed to Compliance Queue and is focused on
-   evidence checks and final review decisions.
+4. **Admin pages:** this pass initially separated the searchable list from the
+   review queue. Feedback 3 later finalized the naming as Applications for the
+   review workspace and Merchant Directory for the searchable list.
 5. **Company profile milestone:** new merchant registrations start with this
    milestone pending. It completes when the merchant saves the editable profile.
 6. **Compliance review milestone:** the UI explains that required document

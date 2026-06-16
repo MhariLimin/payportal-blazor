@@ -37,8 +37,8 @@ Domain; Application depends only on Domain; Domain has no project dependency.
 | Registration request | `/account/register` | Anonymous |
 | Password reset | `/account/forgot-password`, `/account/reset-password` | Anonymous |
 | `Dashboard.tsx` | `/` | Merchant or Admin |
-| `Applications.tsx` | `/applications` | Admin |
+| `Applications.tsx` | `/applications` review workspace and `/merchant-directory` searchable directory | Admin |
 | `MerchantProfile.tsx` | `/merchant/profile` and `/merchants/{id}` | Owner or Admin |
 | `KYCVerification.tsx` | `/kyc` and `/merchants/{id}/kyc` | Owner or Admin |
 | `APICredentials.tsx` | `/api-credentials` | Approved Merchant |
-| `AdminReview.tsx` | `/admin/reviews` | Admin |
+| `AdminReview.tsx` | `/applications` and legacy `/admin/reviews` | Admin |

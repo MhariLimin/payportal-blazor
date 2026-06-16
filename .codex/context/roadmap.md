@@ -20,11 +20,16 @@
     typography and spacing, and role-appropriate navigation.
 12. Refresh demo and technical documentation for all feedback changes.
 13. Implement Post Implementation Feedback 2: compact typography, role-specific
-    dashboards, Compliance Queue positioning, corrected milestone semantics,
+    dashboards, initial review-page positioning, corrected milestone semantics,
     grouped KYC document requirements, feature suggestions, and admin charts.
+14. Implement Post Implementation Feedback 3: stronger UI density, Applications
+    vs Merchant Directory split, merchant dashboard/KYC differentiation,
+    document status actions, separate compliance review, admin activity
+    filters, merchant notifications, chart drill-downs, application audit logs,
+    and more feature suggestions.
 
 ## Next
 
-14. Add unit, integration, authorization, and browser tests.
-15. Add production email, private object storage, malware scanning, MFA, CI,
+15. Add unit, integration, authorization, and browser tests.
+16. Add production email, private object storage, malware scanning, MFA, CI,
     observability, and deployment configuration.
