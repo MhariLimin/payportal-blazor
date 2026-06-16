@@ -6,7 +6,7 @@ using PayPortal.Infrastructure.Persistence;
 namespace PayPortal.Infrastructure.Services;
 
 internal sealed class ActivityService(
-    PortalDbContext dbContext,
+    IDbContextFactory<PortalDbContext> dbContextFactory,
     ICurrentUser currentUser) : IActivityService
 {
     public async Task<IReadOnlyList<ActivityLogItem>> ListAsync(
@@ -14,6 +14,7 @@ internal sealed class ActivityService(
         int count = 50,
         CancellationToken cancellationToken = default)
     {
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         IQueryable<PayPortal.Domain.Entities.ActivityEntry> query = dbContext.ActivityEntries
             .AsNoTracking()
             .Include(x => x.Merchant);
