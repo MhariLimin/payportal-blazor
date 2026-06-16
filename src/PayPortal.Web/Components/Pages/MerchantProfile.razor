@@ -24,7 +24,7 @@ else
         @if (MerchantId.HasValue)
         {
             <nav class="breadcrumbs" aria-label="Breadcrumb">
-                <a href="/applications">Applications</a><span>/</span><span>@merchant.CompanyName</span>
+                <a href="/merchant-directory">Merchant Directory</a><span>/</span><span>@merchant.CompanyName</span>
             </nav>
         }
 
@@ -138,7 +138,7 @@ else
                         <a class="button primary" href="@KycUrl()">View KYC documents</a>
                         @if (MerchantId.HasValue)
                         {
-                            <a class="button secondary" href="/applications">Back to applications</a>
+                            <a class="button secondary" href="/merchant-directory">Back to directory</a>
                         }
                         else if (merchant.Status == MerchantStatus.Approved)
                         {

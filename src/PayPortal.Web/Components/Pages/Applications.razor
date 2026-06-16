@@ -1,13 +1,13 @@
-@page "/applications"
+@page "/merchant-directory"
 @rendermode InteractiveServer
 @attribute [Authorize(Roles = PortalRoles.Admin)]
 @inject IMerchantService MerchantService
 
-<PageTitle>Applications - PayPortal</PageTitle>
+<PageTitle>Merchant Directory - PayPortal</PageTitle>
 
 <div class="page">
     <header class="page-header">
-        <div><h1>Merchant Applications</h1><p>Search, filter, and inspect every merchant application. Use Compliance Queue for final decisions.</p></div>
+        <div><h1>Merchant Directory</h1><p>Search, filter, and inspect all merchants across every application status.</p></div>
         <span class="muted">@Filtered.Count applications</span>
     </header>
 
@@ -71,7 +71,7 @@
                     <StatusBadge Value="merchant.RiskLevel" />
                     <StatusBadge Value="merchant.Status" />
                     <a class="button secondary" href="/merchants/@merchant.Id">View profile</a>
-                    <a class="button primary" href="/admin/reviews?merchantId=@merchant.Id">Review</a>
+                    <a class="button primary" href="/applications?merchantId=@merchant.Id">Review</a>
                 </div>
             }
         </div>

@@ -65,7 +65,7 @@ else
                             }
                             @foreach (var merchant in model.Pending)
                             {
-                                <a class="list-row" href="/merchants/@merchant.Id">
+                                <a class="list-row" href="/applications?merchantId=@merchant.Id">
                                     @MerchantLogo(merchant)
                                     <span class="list-row-main">
                                         <h3>@merchant.CompanyName</h3>

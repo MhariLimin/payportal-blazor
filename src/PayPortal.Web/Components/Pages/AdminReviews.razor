@@ -1,14 +1,15 @@
+@page "/applications"
 @page "/admin/reviews"
 @rendermode InteractiveServer
 @attribute [Authorize(Roles = PortalRoles.Admin)]
 @inject IMerchantService MerchantService
 @inject IReviewService ReviewService
 
-<PageTitle>Compliance Queue - PayPortal</PageTitle>
+<PageTitle>Applications - PayPortal</PageTitle>
 
 <div class="page">
     <header class="page-header">
-        <div><h1>Compliance Queue</h1><p>Focused workspace for pending KYC decisions, evidence checks, and reviewer notes.</p></div>
+        <div><h1>Applications</h1><p>Focused workspace for pending KYC decisions, evidence checks, and reviewer notes.</p></div>
         <span class="muted">@Pending.Count awaiting action</span>
     </header>
 
@@ -19,7 +20,7 @@
 
     <section class="card flush">
         <div class="card-title">
-            <div><h2>Decision Queue</h2><span class="muted">Applications appear here when they are pending or under compliance review.</span></div>
+            <div><h2>Review Queue</h2><span class="muted">Applications appear here when they are pending or under compliance review.</span></div>
         </div>
         <div class="list">
             @if (Pending.Count == 0)
