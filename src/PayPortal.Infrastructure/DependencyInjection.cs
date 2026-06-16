@@ -25,8 +25,9 @@ public static class DependencyInjection
 
         services.AddDbContext<PortalDbContext>(options =>
             ConfigurePortalDbContext(options, connectionString));
-        services.AddDbContextFactory<PortalDbContext>(options =>
-            ConfigurePortalDbContext(options, connectionString));
+        services.AddDbContextFactory<PortalDbContext>(
+            options => ConfigurePortalDbContext(options, connectionString),
+            ServiceLifetime.Scoped);
 
         services.AddIdentityCore<PortalUser>(options =>
             {
