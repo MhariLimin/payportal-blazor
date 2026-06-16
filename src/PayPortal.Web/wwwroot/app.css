@@ -85,9 +85,9 @@ h1, h2, h3, strong { font-family: var(--font-heading); }
 .workspace-context { display: flex; align-items: center; gap: 10px; padding-left: 20px; border-left: 1px solid var(--border); }
 .context-label { font-weight: 700; }
 .context-status { padding: 5px 10px; color: var(--success); background: color-mix(in srgb, var(--success) 12%, transparent); border-radius: 999px; font-size: 12px; font-weight: 700; }
-.user-menu-wrap { position: relative; }
+.user-menu-wrap { position: relative; margin-left: auto; }
 .topbar-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
-.topbar-actions + .notification-wrap, .topbar-actions + .user-menu-wrap { margin-left: 0; }
+.topbar-actions + .notification-wrap, .topbar-actions + .user-menu-wrap, .notification-wrap + .user-menu-wrap { margin-left: 0; }
 .user-summary { display: flex; align-items: center; gap: 10px; padding: 6px 8px; color: var(--text); background: transparent; border: 0; border-radius: 12px; cursor: pointer; }
 .user-summary:hover { background: var(--surface-soft); }
 .user-name { display: grid; min-width: 112px; text-align: left; line-height: 1.18; }
