@@ -1,0 +1,44 @@
+@page "/merchant-activity"
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = PortalRoles.Merchant)]
+@inject IActivityService ActivityService
+
+<PageTitle>My Activity - PayPortal</PageTitle>
+
+<div class="page">
+    <header class="page-header">
+        <div><h1>My Activity</h1><p>Your merchant events plus administrator actions that affect your application.</p></div>
+        <span class="muted">@items.Count events</span>
+    </header>
+
+    <section class="card flush">
+        <div class="card-title"><h2>Activity Stream</h2><a href="/merchant-timeline">Open Timeline</a></div>
+        <div class="list">
+            @if (items.Count == 0)
+            {
+                <div class="empty-state muted">Activity appears here when profile, document, review, or credential work happens.</div>
+            }
+            @foreach (var item in items)
+            {
+                <a class="list-row" href="@ActivityUrl(item)">
+                    <span class="timeline-dot @(item.Action.Contains("approved", StringComparison.OrdinalIgnoreCase) || item.Action.Contains("verified", StringComparison.OrdinalIgnoreCase) ? "complete" : "")"></span>
+                    <span class="list-row-main">
+                        <h3>@item.Title</h3>
+                        <p>@item.Description</p>
+                        <small class="muted">@item.Action | @item.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy h:mm tt")</small>
+                    </span>
+                </a>
+            }
+        </div>
+    </section>
+</div>
+
+@code {
+    private IReadOnlyList<ActivityLogItem> items = [];
+
+    protected override async Task OnInitializedAsync() =>
+        items = await ActivityService.ListAsync(new ActivityLogFilter(null, null, null, null, null), 100);
+
+    private static string ActivityUrl(ActivityLogItem item) =>
+        item.Action.Contains("document", StringComparison.OrdinalIgnoreCase) ? "/document-requests" : "/merchant/profile";
+}

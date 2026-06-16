@@ -148,27 +148,6 @@ else
                 </article>
             </aside>
         </section>
-
-        <section class="card flush">
-            <div class="card-title"><h2>Application Audit Log</h2><span class="muted">@merchant.Activities.Count events</span></div>
-            <div class="list compact-list">
-                @if (merchant.Activities.Count == 0)
-                {
-                    <div class="empty-state muted">Audit events appear here as profile, KYC, review, and credential actions occur.</div>
-                }
-                @foreach (var activity in merchant.Activities.OrderByDescending(x => x.CreatedAtUtc).Take(20))
-                {
-                    <div class="list-row">
-                        <span class="timeline-dot complete"></span>
-                        <span class="list-row-main">
-                            <h3>@ActivityTitle(activity.Action)</h3>
-                            <p>@ActivityDescription(activity)</p>
-                            <small class="muted">@activity.Action | @activity.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy h:mm tt")</small>
-                        </span>
-                    </div>
-                }
-            </div>
-        </section>
     </div>
 }
 
@@ -345,28 +324,6 @@ else
     }
 
     private string KycUrl() => MerchantId.HasValue ? $"/merchants/{MerchantId}/kyc" : "/kyc";
-
-    private static string ActivityTitle(string action) =>
-        action switch
-        {
-            "document_uploaded" => "KYC Document Uploaded",
-            "kyc_document_verified" => "KYC Document Verified",
-            "kyc_document_rejected" => "KYC Document Rejected",
-            "merchant_profile_updated" => "Merchant Profile Updated",
-            "company_logo_updated" => "Company Logo Updated",
-            "application_ready_for_review" => "Application Ready For Review",
-            "compliance_review_completed" => "Compliance Review Completed",
-            "application_approved" => "Application Approved",
-            "application_rejected" => "Application Rejected",
-            "application_moreinformationrequired" => "Additional Documents Requested",
-            "api_credential_issued" => "API Credential Issued",
-            _ => ToTitle(action.Replace('_', ' '))
-        };
-
-    private static string ActivityDescription(ActivityEntry activity) =>
-        string.IsNullOrWhiteSpace(activity.Details)
-            ? $"{activity.EntityType} event recorded."
-            : $"{activity.EntityType}: {ToTitle(activity.Details.Replace('_', ' '))}.";
 
     private static string ToTitle(string value) =>
         string.IsNullOrWhiteSpace(value) ? value : char.ToUpperInvariant(value[0]) + value[1..];

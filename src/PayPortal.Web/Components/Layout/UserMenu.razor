@@ -31,6 +31,10 @@
                         <strong>@auth.User.Identity?.Name</strong>
                         <span>@RoleLabel(auth.User)</span>
                     </div>
+                    @if (auth.User.IsInRole(PortalRoles.Merchant))
+                    {
+                        <a class="dropdown-link" role="menuitem" href="/merchant/profile">Profile</a>
+                    }
                     <button type="button" role="menuitem" @onclick='() => SetThemeAsync("light")'>Light mode</button>
                     <button type="button" role="menuitem" @onclick='() => SetThemeAsync("dark")'>Dark mode</button>
                     <button type="button" role="menuitem" @onclick='() => SetThemeAsync("system")'>Use system theme</button>

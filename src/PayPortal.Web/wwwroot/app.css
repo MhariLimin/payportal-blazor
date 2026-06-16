@@ -86,6 +86,8 @@ h1, h2, h3, strong { font-family: var(--font-heading); }
 .context-label { font-weight: 700; }
 .context-status { padding: 5px 10px; color: var(--success); background: color-mix(in srgb, var(--success) 12%, transparent); border-radius: 999px; font-size: 12px; font-weight: 700; }
 .user-menu-wrap { position: relative; margin-left: auto; }
+.topbar-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.topbar-actions + .notification-wrap, .topbar-actions + .user-menu-wrap { margin-left: 0; }
 .user-summary { display: flex; align-items: center; gap: 10px; padding: 6px 8px; color: var(--text); background: transparent; border: 0; border-radius: 12px; cursor: pointer; }
 .user-summary:hover { background: var(--surface-soft); }
 .user-name { display: grid; min-width: 112px; text-align: left; line-height: 1.18; }
@@ -109,8 +111,21 @@ h1, h2, h3, strong { font-family: var(--font-heading); }
 .dropdown-heading { display: grid; padding: 10px 11px 12px; border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
 .dropdown-heading span { color: var(--muted); font-size: 12px; }
 .user-dropdown button { width: 100%; padding: 10px 11px; color: var(--text); background: transparent; border: 0; border-radius: 8px; text-align: left; cursor: pointer; }
-.user-dropdown button:hover { background: var(--surface-soft); }
+.dropdown-link { display: block; padding: 10px 11px; color: var(--text); border-radius: 8px; font-weight: 700; }
+.user-dropdown button:hover, .dropdown-link:hover { background: var(--surface-soft); }
 .user-dropdown .logout-action { margin-top: 4px; color: var(--danger); border-top: 1px solid var(--border); border-radius: 0 0 8px 8px; }
+.notification-wrap { position: relative; }
+.notification-button {
+    position: relative; display: grid; place-items: center; width: 38px; height: 38px;
+    color: var(--brand-strong); background: var(--surface); border: 1px solid var(--border);
+    border-radius: 50%; cursor: pointer; font-weight: 800;
+}
+.notification-button:hover { background: var(--surface-soft); }
+.notification-button strong {
+    position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px;
+    display: grid; place-items: center; color: #fff; background: var(--danger);
+    border-radius: 999px; font-size: 10px;
+}
 
 .sidebar {
     position: fixed; z-index: 20; top: 58px; bottom: 0; left: 0; width: 220px;
@@ -123,8 +138,10 @@ h1, h2, h3, strong { font-family: var(--font-heading); }
 .nav-menu a:hover { color: var(--text); background: var(--surface-soft); }
 .nav-menu a.active { color: var(--brand-strong); background: color-mix(in srgb, var(--brand) 12%, var(--surface)); }
 .nav-icon { display: grid; place-items: center; width: 27px; height: 27px; border-radius: 8px; color: inherit; background: color-mix(in srgb, currentColor 10%, transparent); font-size: 11px; }
-.sidebar-card { display: grid; gap: 5px; margin-top: auto; padding: 15px; color: #d8f5ff; background: linear-gradient(145deg, #092746, #075d83); border-radius: 13px; }
+.sidebar-card { display: grid; gap: 7px; margin-top: auto; padding: 15px; color: #d8f5ff; background: linear-gradient(145deg, #092746, #075d83); border-radius: 13px; }
 .sidebar-card span { color: #a9cedd; font-size: 12px; }
+.sidebar-card a { color: #fff; padding: 7px 9px; background: rgb(255 255 255 / 10%); border-radius: 8px; font-size: 12px; font-weight: 750; }
+.sidebar-card a:hover { background: rgb(255 255 255 / 16%); }
 .content { min-height: 100vh; margin-left: 220px; padding: 76px 20px 26px; }
 
 .page { display: grid; gap: 12px; max-width: 1500px; margin: 0 auto; }
@@ -261,6 +278,7 @@ label { display: block; margin: 12px 0 5px; color: var(--text); font-size: 12px;
 .credential-heading p { margin-top: 3px; color: var(--muted); font-size: 12px; }
 .permission-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .review-modal { width: min(100%, 860px); max-height: 92vh; }
+.notification-modal { width: min(100%, 880px); max-height: 92vh; overflow-y: auto; }
 .review-body { max-height: 68vh; overflow-y: auto; }
 .review-stat { display: grid; gap: 4px; padding: 14px; background: var(--surface-soft); border-radius: 9px; }
 .review-stat span { color: var(--muted); font-size: 11px; text-transform: uppercase; }

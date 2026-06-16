@@ -10,14 +10,43 @@
             <span class="context-label">Merchant operations</span>
             <span class="context-status">Secure workspace</span>
         </div>
+        <AuthorizeView Roles="@PortalRoles.Admin">
+            <Authorized>
+                <div class="topbar-actions">
+                    <a class="button secondary" href="/applications">Review Queue</a>
+                    <a class="button secondary" href="/reports">Reports</a>
+                </div>
+            </Authorized>
+        </AuthorizeView>
+        <AuthorizeView Roles="@PortalRoles.Merchant">
+            <Authorized>
+                <div class="topbar-actions">
+                    <a class="button secondary" href="/kyc">Upload Documents</a>
+                    <a class="button secondary" href="/api-credentials">API Access</a>
+                </div>
+                <NotificationBell />
+            </Authorized>
+        </AuthorizeView>
         <UserMenu />
     </header>
     <aside class="sidebar">
         <div class="sidebar-label">Workspace</div>
         <NavMenu />
         <div class="sidebar-card">
-            <strong>Need a status check?</strong>
-            <span>Open the dashboard for onboarding progress and recent activity.</span>
+            <strong>Quick workspace</strong>
+            <span>Use the focused pages below for review status, activity, and settings.</span>
+            <AuthorizeView Roles="@PortalRoles.Admin">
+                <Authorized>
+                    <a href="/risk-rules">Risk Rules</a>
+                    <a href="/admin-settings">Admin Settings</a>
+                </Authorized>
+            </AuthorizeView>
+            <AuthorizeView Roles="@PortalRoles.Merchant">
+                <Authorized>
+                    <a href="/document-requests">Document Requests</a>
+                    <a href="/merchant-timeline">Timeline</a>
+                </Authorized>
+            </AuthorizeView>
         </div>
     </aside>
     <main class="content">
