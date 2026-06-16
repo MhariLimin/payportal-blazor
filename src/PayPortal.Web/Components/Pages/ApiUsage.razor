@@ -1,0 +1,80 @@
+@page "/api-usage"
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = PortalRoles.MerchantOrAdmin)]
+@inject IMerchantService MerchantService
+
+<PageTitle>API Usage - PayPortal</PageTitle>
+
+<div class="page">
+    <header class="page-header">
+        <div><h1>API Usage</h1><p>Credential readiness, synthetic request volume, error rate, and webhook delivery status.</p></div>
+        <span class="muted">@Credentials.Count credentials</span>
+    </header>
+
+    <section class="grid stats">
+        <article class="card"><div class="stat-value">@Credentials.Count</div><div class="stat-label">Total credentials</div></article>
+        <article class="card"><div class="stat-value">@Credentials.Count(x => x.IsActive)</div><div class="stat-label">Active credentials</div></article>
+        <article class="card"><div class="stat-value">@EstimatedRequests</div><div class="stat-label">Estimated requests</div></article>
+        <article class="card"><div class="stat-value">@ErrorRate%</div><div class="stat-label">Demo error rate</div></article>
+    </section>
+
+    <section class="card flush">
+        <div class="card-title"><h2>Credential Telemetry</h2><span class="muted">Demo metrics derived from credential age and status</span></div>
+        <div class="list">
+            @if (Credentials.Count == 0)
+            {
+                <div class="empty-state muted">No credentials exist yet.</div>
+            }
+            @foreach (var item in Rows)
+            {
+                <div class="credential-row">
+                    <span class="company-icon">API</span>
+                    <span class="list-row-main">
+                        <h3>@item.Name</h3>
+                        <p>@item.MerchantName | @item.Environment | Last used @item.LastUsed</p>
+                    </span>
+                    <span class="badge approved">@item.Requests requests</span>
+                    <span class="badge @(item.ErrorRate > 3 ? "medium" : "low")">@item.ErrorRate% errors</span>
+                    <span class="badge @(item.WebhookStatus == "Healthy" ? "approved" : "pending")">@item.WebhookStatus</span>
+                </div>
+            }
+        </div>
+    </section>
+</div>
+
+@code {
+    private IReadOnlyList<Merchant> merchants = [];
+    private IReadOnlyList<ApiCredential> Credentials => merchants.SelectMany(x => x.ApiCredentials).ToList();
+    private int EstimatedRequests => Rows.Sum(x => x.Requests);
+    private int ErrorRate => Rows.Count == 0 ? 0 : Rows.Sum(x => x.ErrorRate) / Rows.Count;
+    private IReadOnlyList<ApiUsageRow> Rows => merchants
+        .SelectMany(merchant => merchant.ApiCredentials.Select(credential => BuildRow(merchant, credential)))
+        .ToList();
+
+    protected override async Task OnInitializedAsync() =>
+        merchants = await MerchantService.ListAsync(null, null, null);
+
+    private static ApiUsageRow BuildRow(Merchant merchant, ApiCredential credential)
+    {
+        var age = Math.Max(1, (DateTime.UtcNow - credential.CreatedAtUtc).Days + 1);
+        var requests = credential.IsActive ? age * 37 : age * 8;
+        var errorRate = credential.Environment == CredentialEnvironment.Production ? 2 : 4;
+        return new(
+            merchant.CompanyName,
+            credential.Name,
+            credential.Environment.ToString(),
+            credential.LastUsedAtUtc?.ToLocalTime().ToString("MMM d, yyyy h:mm tt") ?? "not recorded",
+            requests,
+            errorRate,
+            merchant.Webhooks.Any(x => x.IsActive) ? "Healthy" : "Not configured");
+    }
+
+    private sealed record ApiUsageRow(
+        string MerchantName,
+        string Name,
+        string Environment,
+        string LastUsed,
+        int Requests,
+        int ErrorRate,
+        string WebhookStatus);
+}

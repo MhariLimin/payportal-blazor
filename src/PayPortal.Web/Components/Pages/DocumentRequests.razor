@@ -1,0 +1,82 @@
+@page "/document-requests"
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = PortalRoles.MerchantOrAdmin)]
+@inject IMerchantService MerchantService
+
+<PageTitle>Document Requests - PayPortal</PageTitle>
+
+<div class="page">
+    <header class="page-header">
+        <div><h1>Document Requests</h1><p>Missing, rejected, and resubmission tasks for KYC evidence.</p></div>
+        <span class="muted">@Tasks.Count tasks</span>
+    </header>
+
+    <section class="card flush">
+        <div class="card-title"><h2>Request Center</h2><span class="muted">Rejected documents become merchant resubmission tasks</span></div>
+        <div class="list">
+            @if (Tasks.Count == 0)
+            {
+                <div class="empty-state muted">No document requests are currently open.</div>
+            }
+            @foreach (var task in Tasks)
+            {
+                <a class="list-row" href="@TaskUrl(task)">
+                    <span class="company-icon">DOC</span>
+                    <span class="list-row-main">
+                        <h3>@task.Label</h3>
+                        <p>@task.MerchantName | @task.Description</p>
+                        <small class="muted">@task.State</small>
+                    </span>
+                    <span class="badge @(task.State == "Resubmission needed" ? "rejected" : "pending")">@task.State</span>
+                </a>
+            }
+        </div>
+    </section>
+</div>
+
+@code {
+    private IReadOnlyList<Merchant> merchants = [];
+    private IReadOnlyList<DocumentTask> Tasks => merchants.SelectMany(BuildTasks).ToList();
+    private readonly (string Type, string Label)[] Requirements =
+    [
+        ("business_registration", "Certificate of Incorporation"),
+        ("tax_certificate", "Tax Registration Certificate"),
+        ("id_document", "Director ID Document")
+    ];
+
+    protected override async Task OnInitializedAsync() =>
+        merchants = await MerchantService.ListAsync(null, null, null);
+
+    private IEnumerable<DocumentTask> BuildTasks(Merchant merchant)
+    {
+        foreach (var requirement in Requirements)
+        {
+            var documents = merchant.KycDocuments
+                .Where(x => x.DocumentType == requirement.Type)
+                .OrderByDescending(x => x.CreatedAtUtc)
+                .ToList();
+            if (documents.Count == 0)
+            {
+                yield return new(merchant.Id, merchant.CompanyName, requirement.Label, "Missing required evidence.", "Missing upload");
+                continue;
+            }
+
+            var latest = documents[0];
+            if (latest.Status == DocumentStatus.Rejected)
+            {
+                yield return new(
+                    merchant.Id,
+                    merchant.CompanyName,
+                    requirement.Label,
+                    string.IsNullOrWhiteSpace(latest.RejectionReason)
+                        ? "Rejected by reviewer. Upload a replacement from KYC Verification."
+                        : latest.RejectionReason,
+                    "Resubmission needed");
+            }
+        }
+    }
+
+    private static string TaskUrl(DocumentTask task) => $"/merchants/{task.MerchantId}/kyc";
+
+    private sealed record DocumentTask(Guid MerchantId, string MerchantName, string Label, string Description, string State);
+}

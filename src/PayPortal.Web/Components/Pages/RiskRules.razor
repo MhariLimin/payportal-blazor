@@ -1,0 +1,86 @@
+@page "/risk-rules"
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = PortalRoles.Admin)]
+@inject IMerchantService MerchantService
+
+<PageTitle>Risk Rules - PayPortal</PageTitle>
+
+<div class="page">
+    <header class="page-header">
+        <div><h1>Risk Rules</h1><p>Demo risk scoring rules used to classify merchant onboarding attention.</p></div>
+        <span class="muted">@HighAttention.Count high attention</span>
+    </header>
+
+    <section class="grid three">
+        @foreach (var rule in Rules)
+        {
+            <article class="card">
+                <h2>@rule.Name</h2>
+                <p class="muted">@rule.Description</p>
+                <div class="stat-value">@rule.Weight</div>
+                <div class="stat-label">Risk points</div>
+            </article>
+        }
+    </section>
+
+    <section class="card flush">
+        <div class="card-title"><h2>Risk Attention Queue</h2><span class="muted">Calculated from profile and document review signals</span></div>
+        <div class="list">
+            @if (HighAttention.Count == 0)
+            {
+                <div class="empty-state muted">No high-risk merchants currently require enhanced review.</div>
+            }
+            @foreach (var merchant in HighAttention)
+            {
+                <a class="list-row" href="/merchants/@merchant.Id">
+                    <span class="company-icon">R</span>
+                    <span class="list-row-main">
+                        <h3>@merchant.CompanyName</h3>
+                        <p>@RiskReason(merchant)</p>
+                    </span>
+                    <StatusBadge Value="merchant.RiskLevel" />
+                </a>
+            }
+        </div>
+    </section>
+</div>
+
+@code {
+    private IReadOnlyList<Merchant> merchants = [];
+    private IReadOnlyList<Merchant> HighAttention => merchants
+        .Where(x => x.RiskLevel == RiskLevel.High)
+        .ToList();
+
+    private readonly (string Name, string Description, int Weight)[] Rules =
+    [
+        ("Financial Services", "Financial services merchants receive enhanced due diligence.", 2),
+        ("Real Estate", "Real estate merchants receive additional ownership checks.", 1),
+        ("Corporation", "Corporations receive an extra profile verification point.", 1),
+        ("Rejected Documents", "Every rejected KYC document adds two risk points.", 2)
+    ];
+
+    protected override async Task OnInitializedAsync() =>
+        merchants = await MerchantService.ListAsync(null, null, null);
+
+    private static string RiskReason(Merchant merchant)
+    {
+        var reasons = new List<string>();
+        if (merchant.Industry is "Financial Services" or "Real Estate")
+        {
+            reasons.Add(merchant.Industry);
+        }
+
+        if (merchant.BusinessType == "Corporation")
+        {
+            reasons.Add("Corporation");
+        }
+
+        var rejected = merchant.KycDocuments.Count(x => x.Status == DocumentStatus.Rejected);
+        if (rejected > 0)
+        {
+            reasons.Add($"{rejected} rejected document(s)");
+        }
+
+        return reasons.Count == 0 ? "Manual high-risk classification." : string.Join(", ", reasons);
+    }
+}

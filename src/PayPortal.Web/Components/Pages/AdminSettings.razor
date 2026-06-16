@@ -1,0 +1,43 @@
+@page "/admin-settings"
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = PortalRoles.Admin)]
+
+<PageTitle>Admin Settings - PayPortal</PageTitle>
+
+<div class="page">
+    <header class="page-header">
+        <div><h1>Admin Settings</h1><p>Review policy, document controls, password guidance, and SLA targets.</p></div>
+        <span class="muted">Demo configuration</span>
+    </header>
+
+    <section class="grid two">
+        <article class="card">
+            <h2>Document Requirements</h2>
+            <div class="readiness-list">
+                <div><strong>Certificate of Incorporation</strong><span>Required</span></div>
+                <div><strong>Tax Registration Certificate</strong><span>Required</span></div>
+                <div><strong>Director ID Document</strong><span>Required</span></div>
+            </div>
+        </article>
+        <article class="card">
+            <h2>File Controls</h2>
+            <div class="readiness-list">
+                <div><strong>Allowed file types</strong><span>PDF, PNG, JPEG</span></div>
+                <div><strong>Maximum document size</strong><span>10 MB</span></div>
+                <div><strong>Production file scanning</strong><span>Required before verify/download</span></div>
+            </div>
+        </article>
+        <article class="card">
+            <h2>Password Policy Notes</h2>
+            <p class="muted">ASP.NET Identity enforces account authentication. Demo guidance requires at least eight characters and a unique email address.</p>
+        </article>
+        <article class="card">
+            <h2>Review SLA Targets</h2>
+            <div class="readiness-list">
+                <div><strong>Pending application</strong><span>Review within 2 business days</span></div>
+                <div><strong>Rejected document resubmission</strong><span>Review within 1 business day</span></div>
+                <div><strong>High risk queue</strong><span>Same-day triage</span></div>
+            </div>
+        </article>
+    </section>
+</div>

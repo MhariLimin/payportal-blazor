@@ -1,0 +1,84 @@
+@page "/reports"
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = PortalRoles.Admin)]
+@inject IMerchantService MerchantService
+
+<PageTitle>Reports - PayPortal</PageTitle>
+
+<div class="page">
+    <header class="page-header">
+        <div><h1>Reports</h1><p>Onboarding conversion, approval rate, rejection reasons, review time, and document completeness.</p></div>
+        <button class="button secondary" @onclick="PrepareExport">Export Summary</button>
+    </header>
+
+    @if (!string.IsNullOrWhiteSpace(message))
+    {
+        <div class="alert success">@message</div>
+    }
+
+    <section class="grid stats">
+        <article class="card"><div class="stat-value">@merchants.Count</div><div class="stat-label">Total merchants</div></article>
+        <article class="card"><div class="stat-value">@ApprovalRate%</div><div class="stat-label">Approval rate</div></article>
+        <article class="card"><div class="stat-value">@DocumentCompleteness%</div><div class="stat-label">Document completeness</div></article>
+        <article class="card"><div class="stat-value">@AverageReviewDays</div><div class="stat-label">Avg review days</div></article>
+    </section>
+
+    <section class="grid two">
+        <article class="card chart-card">
+            <h2>Conversion by Status</h2>
+            @foreach (var item in StatusRows)
+            {
+                <a class="chart-row" href="/merchant-directory?status=@item.Status">
+                    <span>@FormatStatus(item.Status)</span>
+                    <div class="chart-track"><span style="width: @BarWidth(item.Count)%"></span></div>
+                    <strong>@item.Count</strong>
+                </a>
+            }
+        </article>
+        <article class="card">
+            <h2>Rejection Reasons</h2>
+            <div class="readiness-list">
+                <div><strong>Rejected documents</strong><span>@RejectedDocuments</span></div>
+                <div><strong>Rejected applications</strong><span>@merchants.Count(x => x.Status == MerchantStatus.Rejected)</span></div>
+                <div><strong>More information requests</strong><span>@MoreInformationRequests</span></div>
+            </div>
+        </article>
+    </section>
+</div>
+
+@code {
+    private IReadOnlyList<Merchant> merchants = [];
+    private string? message;
+    private int Decided => merchants.Count(x => x.Status is MerchantStatus.Approved or MerchantStatus.Rejected);
+    private decimal ApprovalRate => Decided == 0 ? 0 : decimal.Round(merchants.Count(x => x.Status == MerchantStatus.Approved) * 100m / Decided, 1);
+    private int DocumentCompleteness => merchants.Count == 0 ? 0 : merchants.Sum(RequiredDocumentCount) * 100 / (merchants.Count * 3);
+    private int RejectedDocuments => merchants.Sum(x => x.KycDocuments.Count(document => document.Status == DocumentStatus.Rejected));
+    private int MoreInformationRequests => merchants.Sum(x => x.Reviews.Count(review => review.Decision == ReviewDecision.MoreInformationRequired));
+    private int AverageReviewDays => Decided == 0
+        ? 0
+        : (int)Math.Round(merchants
+            .Where(x => x.ApprovedAtUtc.HasValue)
+            .Select(x => (x.ApprovedAtUtc!.Value - x.CreatedAtUtc).TotalDays)
+            .DefaultIfEmpty(0)
+            .Average());
+    private IEnumerable<(MerchantStatus Status, int Count)> StatusRows =>
+        Enum.GetValues<MerchantStatus>().Select(status => (status, merchants.Count(x => x.Status == status)));
+
+    protected override async Task OnInitializedAsync() =>
+        merchants = await MerchantService.ListAsync(null, null, null);
+
+    private int BarWidth(int value) =>
+        merchants.Count == 0 ? 0 : Math.Max(8, value * 100 / merchants.Count);
+
+    private static int RequiredDocumentCount(Merchant merchant)
+    {
+        var required = new[] { "business_registration", "tax_certificate", "id_document" };
+        return required.Count(type => merchant.KycDocuments.Any(x => x.DocumentType == type));
+    }
+
+    private void PrepareExport() =>
+        message = $"Prepared report export for {merchants.Count} merchants with {ApprovalRate}% approval rate.";
+
+    private static string FormatStatus(MerchantStatus status) =>
+        status == MerchantStatus.UnderReview ? "Under Review" : status.ToString();
+}
