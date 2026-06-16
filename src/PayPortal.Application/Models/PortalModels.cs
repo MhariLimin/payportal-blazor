@@ -89,6 +89,7 @@ public sealed record DashboardModel(
     int Rejected,
     int HighRisk,
     decimal ApprovalRate,
+    Merchant? CurrentMerchant,
     IReadOnlyList<Merchant> Pending,
     IReadOnlyList<DashboardActivity> RecentActivity);
 

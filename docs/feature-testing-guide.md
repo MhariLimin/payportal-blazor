@@ -83,11 +83,12 @@ being sent through email.
 
 1. Sign in as a Merchant.
 2. Open `/`.
-3. Review total merchant, pending, under-review, and approved statistics.
-4. Review approval rate, funnel, pending approvals, and recent activity.
+3. Review onboarding progress, uploaded documents, verified documents, and API
+   credential count.
+4. Review Next Steps, recent documents, account readiness, and recent activity.
 
-Expected: a Merchant sees data scoped to its own application. New actions such
-as document uploads and credential issuance appear in recent activity.
+Expected: a Merchant sees a dashboard focused on its own application rather
+than the administrator's portfolio metrics.
 
 ## 6. Merchant Profile
 
@@ -128,10 +129,11 @@ stored outside the public web root with generated storage names.
 ## 8. Administrator Dashboard and Navigation
 
 1. Log out and sign in as the seeded administrator.
-2. Confirm the sidebar shows `Applications` and `Admin Review`.
+2. Confirm the sidebar shows `Applications` and `Compliance Queue`.
 3. Confirm it does not show Merchant Profile, KYC Verification, or API
    Credentials.
-4. Open the dashboard and review aggregate statistics and recent activity.
+4. Open the dashboard and review aggregate statistics, funnel bars, decision
+   mix chart, risk attention, pending approvals, and recent activity.
 5. Confirm activity descriptions identify which merchant performed the action.
 
 Expected: Admin sees portal-wide data and Admin-only navigation.
@@ -146,10 +148,10 @@ Expected: Admin sees portal-wide data and Admin-only navigation.
 6. Filter by business type and industry.
 7. Combine multiple filters.
 8. Select `View profile`.
-9. Return and select `Review`.
+9. Return and select `Review` to open that merchant in the Compliance Queue.
 
 Expected: the list updates immediately and links open the selected merchant's
-profile or preselected review dialog.
+profile or preselected compliance decision dialog.
 
 ## 10. Admin Merchant and KYC Inspection
 
@@ -166,7 +168,7 @@ owner-scoped.
 
 ## 11. Request Additional Documents
 
-1. Open `Admin Review`.
+1. Open `Compliance Queue`.
 2. Select Merchant C.
 3. Select `Request Documents`.
 4. Enter specific reviewer notes.
@@ -183,7 +185,7 @@ Negative check: submit without reviewer notes and confirm validation blocks it.
 
 ## 12. Reject an Application
 
-1. Open `Admin Review`.
+1. Open `Compliance Queue`.
 2. Select Merchant B.
 3. Select `Reject`.
 4. Enter a rejection explanation and submit.
@@ -199,7 +201,7 @@ Expected:
 
 ## 13. Approve an Application
 
-1. Open `Admin Review`.
+1. Open `Compliance Queue`.
 2. Select Merchant A.
 3. Select `Approve`.
 4. Enter approval notes and submit.
@@ -257,7 +259,7 @@ Merchant checks:
 Admin checks:
 
 1. Sign in as Admin.
-2. Confirm Applications and Admin Review are available.
+2. Confirm Applications and Compliance Queue are available.
 3. Confirm Admin can inspect multiple merchant records.
 
 Expected: route authorization and service-level ownership checks prevent

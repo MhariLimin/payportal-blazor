@@ -39,11 +39,12 @@ This document maps the requested feedback to the implemented behavior.
 
 ## KYC Progress Rules
 
-- Company profile completion: completed during registration.
+- Company profile completion: completed only after the merchant reviews and
+  saves the editable Merchant Profile.
 - Required documents: completed after incorporation, tax, and director ID
   evidence have all been uploaded.
-- Compliance review: completed when an administrator approves or rejects the
-  application.
+- Compliance review: starts after required documents are uploaded and is
+  completed when an administrator approves or rejects the application.
 - Application approval: completed only when the decision is Approved.
 
 Requesting more information returns the application to Pending and keeps review

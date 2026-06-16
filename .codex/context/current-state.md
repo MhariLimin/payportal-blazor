@@ -14,8 +14,15 @@ captured in the migration specification and Git history.
 - Admin application search, review, approval, rejection, and document requests.
 - API key generation and rotation with one-time secret display.
 - Dashboard statistics, approval funnel, pending work, and recent activity.
+- Role-specific dashboards: admins see portfolio charts and review workload,
+  while merchants see onboarding progress, documents, next steps, and account
+  readiness.
 - Editable merchant profiles and private company-logo uploads.
 - Functional KYC milestones and authorized document downloads.
+- New registrations leave the company profile milestone pending until the
+  merchant saves the editable profile.
+- KYC document requirements are grouped with matching uploads in the main KYC
+  document card.
 - Merchant-aware activity descriptions, admin filters, and detail breadcrumbs.
 - PayPortal branding with persistent light, dark, and system themes.
 
@@ -31,4 +38,6 @@ captured in the migration specification and Git history.
 - Solution build succeeds with zero warnings and errors after feedback work.
 - Registration fields/options, static brand assets, protected redirects,
   authenticated admin filters, and role-specific navigation are route tested.
+- Feedback 2 UI density, dashboard, milestone, KYC document grouping, and
+  Compliance Queue changes are implemented.
 - Automated tests remain future work.

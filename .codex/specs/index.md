@@ -22,3 +22,4 @@
 10. `resolved/10-merchant-profile-and-logo.md`
 11. `resolved/11-kyc-admin-workflow.md`
 12. `resolved/12-branding-theme-and-ui.md`
+13. `resolved/13-feedback-2-dashboard-and-kyc.md`

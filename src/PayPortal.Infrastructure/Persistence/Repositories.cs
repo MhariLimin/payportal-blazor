@@ -29,6 +29,7 @@ internal sealed class MerchantRepository(PortalDbContext dbContext) : IMerchantR
         .Include(x => x.Reviews)
         .Include(x => x.ApiCredentials)
         .Include(x => x.Webhooks)
+        .Include(x => x.Activities)
         .AsSplitQuery();
 }
 

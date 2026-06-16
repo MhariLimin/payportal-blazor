@@ -41,7 +41,7 @@ else
 
         <section class="card workflow-explainer">
             <strong>How verification works</strong>
-            <p>Upload the three required documents in any order. After all required evidence is present, the application moves to Compliance Review, where an administrator checks the company information and files before approving or requesting changes.</p>
+            <p>First review and save the company profile. Then upload the required documents. After all required evidence is present, the application moves to Compliance Review, where an administrator checks the company information and files before approving or requesting changes.</p>
         </section>
 
         <section class="grid stats">
@@ -86,33 +86,45 @@ else
             </article>
 
             <article class="card flush span-content">
-                <div class="card-title"><h2>Uploaded Documents</h2><span class="muted">@merchant.KycDocuments.Count files</span></div>
+                <div class="card-title"><h2>Document Requirements</h2><span class="muted">@merchant.KycDocuments.Count files uploaded</span></div>
                 <div class="list">
-                    @if (merchant.KycDocuments.Count == 0)
+                    @foreach (var requirement in Requirements)
                     {
-                        <div class="empty-state">
-                            <h3>No documents uploaded</h3>
-                            <p class="muted">Upload the required evidence to begin verification.</p>
-                        </div>
-                    }
-                    @foreach (var document in merchant.KycDocuments.OrderByDescending(x => x.CreatedAtUtc))
-                    {
-                        <div class="document-row">
-                            <span class="company-icon">DOC</span>
+                        var documents = merchant.KycDocuments
+                            .Where(x => x.DocumentType == requirement.Type)
+                            .OrderByDescending(x => x.CreatedAtUtc)
+                            .ToList();
+
+                        <div class="requirement-row">
+                            <span class="requirement-state">@RequirementState(requirement.Type)</span>
                             <span class="list-row-main">
-                                <h3>@document.DocumentName</h3>
-                                <p>@Humanize(document.DocumentType) | @FormatBytes(document.FileSize) | @document.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy")</p>
-                                @if (!string.IsNullOrWhiteSpace(document.ReviewerNotes))
+                                <h3>@requirement.Label</h3>
+                                <p>@(requirement.Required ? "Required" : "Optional") evidence</p>
+                                @if (documents.Count == 0)
                                 {
-                                    <div class="review-note"><strong>Reviewer note:</strong> @document.ReviewerNotes</div>
+                                    <div class="document-slot muted">No file uploaded for this requirement.</div>
                                 }
-                                @if (!string.IsNullOrWhiteSpace(document.RejectionReason))
+                                @foreach (var document in documents)
                                 {
-                                    <div class="alert error"><strong>Rejected:</strong> @document.RejectionReason</div>
+                                    <div class="document-upload">
+                                        <span class="company-icon">DOC</span>
+                                        <span class="list-row-main">
+                                            <strong>@document.DocumentName</strong>
+                                            <small class="muted">@FormatBytes(document.FileSize) | @document.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy")</small>
+                                            @if (!string.IsNullOrWhiteSpace(document.ReviewerNotes))
+                                            {
+                                                <div class="review-note"><strong>Reviewer note:</strong> @document.ReviewerNotes</div>
+                                            }
+                                            @if (!string.IsNullOrWhiteSpace(document.RejectionReason))
+                                            {
+                                                <div class="alert error"><strong>Rejected:</strong> @document.RejectionReason</div>
+                                            }
+                                        </span>
+                                        <StatusBadge Value="document.Status" />
+                                        <a class="button secondary" href="/kyc-documents/@document.Id/download">View or download</a>
+                                    </div>
                                 }
                             </span>
-                            <StatusBadge Value="document.Status" />
-                            <a class="button secondary" href="/kyc-documents/@document.Id/download">View or download</a>
                         </div>
                     }
                 </div>
@@ -138,20 +150,6 @@ else
                 </div>
             </section>
         }
-
-        <section class="card">
-            <h2>Document Requirements</h2>
-            <div class="grid three requirements">
-                @foreach (var requirement in Requirements)
-                {
-                    var document = merchant.KycDocuments.FirstOrDefault(x => x.DocumentType == requirement.Type);
-                    <div class="requirement">
-                        <span class="requirement-state">@(document?.Status == DocumentStatus.Verified ? "OK" : document is null ? "!" : "...")</span>
-                        <div><strong>@requirement.Label</strong><p class="muted">@(requirement.Required ? "Required" : "Optional")</p></div>
-                    </div>
-                }
-            </div>
-        </section>
     </div>
 
     @if (showUpload)
@@ -260,10 +258,19 @@ else
             {
                 "profile" => "Provide the company, contact, and registered address information.",
                 "documents" => "Upload the incorporation, tax registration, and director identity documents.",
-                "review" => "An administrator checks the company details and uploaded evidence.",
+                "review" => "Starts after all required documents are uploaded; an administrator checks the company details and evidence.",
                 "approval" => "The application is approved after compliance review succeeds.",
                 _ => "Complete this onboarding step."
             };
+
+    private string RequirementState(string type)
+    {
+        var document = merchant!.KycDocuments
+            .Where(x => x.DocumentType == type)
+            .OrderByDescending(x => x.CreatedAtUtc)
+            .FirstOrDefault();
+        return document?.Status == DocumentStatus.Verified ? "OK" : document is null ? "!" : "...";
+    }
 
     private static string Humanize(string value)
     {

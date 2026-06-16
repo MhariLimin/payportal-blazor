@@ -12,96 +12,152 @@
 else
 {
     <div class="page">
-        <header class="page-header">
-            <div><h1>Dashboard</h1><p>Merchant onboarding overview</p></div>
-            <span class="muted">Updated @DateTime.Now.ToString("MMM d, yyyy")</span>
-        </header>
+        <AuthorizeView Roles="@PortalRoles.Admin">
+            <Authorized>
+                <header class="page-header">
+                    <div><h1>Admin Dashboard</h1><p>Portal-wide merchant onboarding, review workload, and risk overview.</p></div>
+                    <span class="muted">Updated @DateTime.Now.ToString("MMM d, yyyy")</span>
+                </header>
 
-        <section class="grid stats">
-            @foreach (var stat in Stats())
-            {
-                <article class="card">
-                    <span class="stat-icon">@stat.Icon</span>
-                    <div class="stat-value">@stat.Value</div>
-                    <div class="stat-label">@stat.Label</div>
-                </article>
-            }
-        </section>
-
-        <section class="grid three">
-            <article class="card">
-                <h2>Approval Rate</h2>
-                <div class="stat-value">@model.ApprovalRate%</div>
-                <div class="progress"><span style="width: @model.ApprovalRate%"></span></div>
-                <p class="muted">@model.Approved approved of @(model.Approved + model.Rejected) decisions</p>
-            </article>
-            <article class="card">
-                <h2>Approval Funnel</h2>
-                <div class="stat-value">@model.PendingApplications -> @model.UnderReview -> @model.Approved</div>
-                <p class="muted">Pending to review to approval</p>
-            </article>
-            <article class="card">
-                <h2>High Risk Merchants</h2>
-                <div class="stat-value">@model.HighRisk</div>
-                <p class="muted">Requires enhanced due diligence</p>
-            </article>
-        </section>
-
-        <section class="grid two">
-            <article class="card flush">
-                <div class="card-title"><h2>Pending Approvals</h2><span class="muted">@model.Pending.Count applications</span></div>
-                <div class="list">
-                    @if (model.Pending.Count == 0)
+                <section class="grid stats">
+                    @foreach (var stat in Stats())
                     {
-                        <div class="empty-state muted">No pending approvals.</div>
+                        <article class="card stat-card">
+                            <span class="stat-icon">@stat.Icon</span>
+                            <div class="stat-value">@stat.Value</div>
+                            <div class="stat-label">@stat.Label</div>
+                        </article>
                     }
-                    @foreach (var merchant in model.Pending)
-                    {
-                        <a class="list-row" href="/merchants/@merchant.Id">
-                            @if (!string.IsNullOrWhiteSpace(merchant.LogoStorageName))
+                </section>
+
+                <section class="grid three">
+                    <article class="card chart-card">
+                        <h2>Application Funnel</h2>
+                        @foreach (var segment in Funnel())
+                        {
+                            <div class="chart-row">
+                                <span>@segment.Label</span>
+                                <div class="chart-track"><span style="width: @BarWidth(segment.Value)%"></span></div>
+                                <strong>@segment.Value</strong>
+                            </div>
+                        }
+                    </article>
+                    <article class="card chart-card">
+                        <h2>Decision Mix</h2>
+                        <div class="donut" style="--value:@model.ApprovalRate"><span>@model.ApprovalRate%</span></div>
+                        <p class="muted">@model.Approved approved of @(model.Approved + model.Rejected) completed decisions.</p>
+                    </article>
+                    <article class="card chart-card">
+                        <h2>Risk Attention</h2>
+                        <div class="stat-value">@model.HighRisk</div>
+                        <p class="muted">High-risk merchants requiring enhanced due diligence.</p>
+                        <a class="button secondary" href="/applications">Open Applications</a>
+                    </article>
+                </section>
+
+                <section class="grid two">
+                    <article class="card flush">
+                        <div class="card-title"><h2>Pending Approvals</h2><span class="muted">@model.Pending.Count applications</span></div>
+                        <div class="list">
+                            @if (model.Pending.Count == 0)
                             {
-                                <img class="company-logo" src="/merchant-logos/@merchant.Id" alt="" />
+                                <div class="empty-state muted">No pending approvals.</div>
                             }
-                            else
+                            @foreach (var merchant in model.Pending)
                             {
-                                <span class="company-icon">PP</span>
+                                <a class="list-row" href="/merchants/@merchant.Id">
+                                    @MerchantLogo(merchant)
+                                    <span class="list-row-main">
+                                        <h3>@merchant.CompanyName</h3>
+                                        <p>@(merchant.Industry ?? "Industry not provided") | @merchant.BusinessType</p>
+                                    </span>
+                                    <StatusBadge Value="merchant.Status" />
+                                </a>
                             }
-                            <span class="list-row-main">
-                                <h3>@merchant.CompanyName</h3>
-                                <p>@(merchant.Industry ?? "Industry not provided") | @merchant.BusinessType</p>
-                            </span>
-                            <StatusBadge Value="merchant.Status" />
-                        </a>
-                    }
-                </div>
-            </article>
-            <article class="card flush">
-                <div class="card-title"><h2>Recent Activity</h2></div>
-                <div class="list">
-                    @if (model.RecentActivity.Count == 0)
-                    {
-                        <div class="empty-state muted">Activity appears here as work is completed.</div>
-                    }
-                    @foreach (var activity in model.RecentActivity)
-                    {
-                        <a class="list-row" href="@ActivityUrl(activity)">
-                            <span class="timeline-dot complete"></span>
-                            <span class="list-row-main">
-                                <h3>@activity.Title</h3>
-                                <p>@activity.Description</p>
-                                <small class="muted">@activity.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy h:mm tt")</small>
-                            </span>
-                        </a>
-                    }
-                </div>
-            </article>
-        </section>
+                        </div>
+                    </article>
+                    @RecentActivityPanel()
+                </section>
+            </Authorized>
+        </AuthorizeView>
+
+        <AuthorizeView Roles="@PortalRoles.Merchant">
+            <Authorized>
+                @if (model.CurrentMerchant is { } merchant)
+                {
+                    <header class="page-header">
+                        <div><h1>Merchant Dashboard</h1><p>@merchant.CompanyName onboarding progress and next actions.</p></div>
+                        <StatusBadge Value="merchant.Status" />
+                    </header>
+
+                    <section class="grid stats">
+                        <article class="card stat-card">
+                            <div class="stat-value">@MerchantProgress(merchant)%</div>
+                            <div class="stat-label">Onboarding progress</div>
+                            <div class="progress"><span style="width: @MerchantProgress(merchant)%"></span></div>
+                        </article>
+                        <article class="card stat-card"><div class="stat-value">@merchant.KycDocuments.Count</div><div class="stat-label">Uploaded documents</div></article>
+                        <article class="card stat-card"><div class="stat-value">@merchant.KycDocuments.Count(x => x.Status == DocumentStatus.Verified)</div><div class="stat-label">Verified documents</div></article>
+                        <article class="card stat-card"><div class="stat-value">@merchant.ApiCredentials.Count</div><div class="stat-label">API credentials</div></article>
+                    </section>
+
+                    <section class="grid two">
+                        <article class="card flush">
+                            <div class="card-title"><h2>Next Steps</h2><span class="muted">@NextStep(merchant)</span></div>
+                            <div class="list">
+                                @foreach (var milestone in merchant.KycMilestones.OrderBy(x => x.CreatedAtUtc))
+                                {
+                                    <a class="list-row" href="@MilestoneUrl(milestone)">
+                                        <span class="timeline-dot @(milestone.IsCompleted ? "complete" : "")"></span>
+                                        <span class="list-row-main">
+                                            <h3>@milestone.Title</h3>
+                                            <p>@(milestone.IsCompleted ? "Completed" : MilestoneDescription(milestone))</p>
+                                        </span>
+                                    </a>
+                                }
+                            </div>
+                        </article>
+
+                        <article class="card flush">
+                            <div class="card-title"><h2>Documents</h2><a href="/kyc">Open KYC</a></div>
+                            <div class="list">
+                                @foreach (var document in merchant.KycDocuments.OrderByDescending(x => x.CreatedAtUtc).Take(4))
+                                {
+                                    <div class="list-row">
+                                        <span class="company-icon">DOC</span>
+                                        <span class="list-row-main"><h3>@document.DocumentName</h3><p>@Humanize(document.DocumentType)</p></span>
+                                        <StatusBadge Value="document.Status" />
+                                    </div>
+                                }
+                                @if (merchant.KycDocuments.Count == 0)
+                                {
+                                    <div class="empty-state muted">Upload your required KYC documents to begin review.</div>
+                                }
+                            </div>
+                        </article>
+                    </section>
+
+                    <section class="grid two">
+                        <article class="card">
+                            <h2>Account Readiness</h2>
+                            <p class="muted">API credentials become available after an administrator approves the application.</p>
+                            <a class="button primary" href="@(merchant.Status == MerchantStatus.Approved ? "/api-credentials" : "/kyc")">
+                                @(merchant.Status == MerchantStatus.Approved ? "Manage API Credentials" : "Continue Verification")
+                            </a>
+                        </article>
+                        @RecentActivityPanel()
+                    </section>
+                }
+            </Authorized>
+        </AuthorizeView>
     </div>
 }
 
 @code {
     private DashboardModel? model;
-    protected override async Task OnInitializedAsync() => model = await MerchantService.GetDashboardAsync();
+
+    protected override async Task OnInitializedAsync() =>
+        model = await MerchantService.GetDashboardAsync();
 
     private static string ActivityUrl(DashboardActivity activity) =>
         activity.MerchantId.HasValue ? $"/merchants/{activity.MerchantId}" : "/";
@@ -113,4 +169,75 @@ else
         yield return ("Under Review", model.UnderReview, "UR");
         yield return ("Approved", model.Approved, "A");
     }
+
+    private IEnumerable<(string Label, int Value)> Funnel()
+    {
+        yield return ("Pending", model!.PendingApplications);
+        yield return ("Under Review", model.UnderReview);
+        yield return ("Approved", model.Approved);
+        yield return ("Rejected", model.Rejected);
+    }
+
+    private int BarWidth(int value) =>
+        model!.TotalMerchants == 0 ? 0 : Math.Max(8, value * 100 / model.TotalMerchants);
+
+    private static int MerchantProgress(Merchant merchant) =>
+        merchant.KycMilestones.Count == 0
+            ? 0
+            : merchant.KycMilestones.Count(x => x.IsCompleted) * 100 / merchant.KycMilestones.Count;
+
+    private static string NextStep(Merchant merchant) =>
+        merchant.KycMilestones.OrderBy(x => x.CreatedAtUtc).FirstOrDefault(x => !x.IsCompleted)?.Title
+        ?? "Onboarding complete";
+
+    private static string MilestoneUrl(KycMilestone milestone) =>
+        milestone.Type == "profile" ? "/merchant/profile" : "/kyc";
+
+    private static string MilestoneDescription(KycMilestone milestone) =>
+        milestone.Type switch
+        {
+            "profile" => "Review and save your company profile.",
+            "documents" => "Upload the required business, tax, and identity documents.",
+            "review" => "Wait for the administrator compliance decision.",
+            "approval" => "Approval unlocks API credential management.",
+            _ => milestone.Description ?? "Complete this onboarding step."
+        };
+
+    private static string Humanize(string value)
+    {
+        var text = value.Replace('_', ' ');
+        return char.ToUpperInvariant(text[0]) + text[1..];
+    }
+
+    private RenderFragment MerchantLogo(Merchant merchant) => @<text>
+        @if (!string.IsNullOrWhiteSpace(merchant.LogoStorageName))
+        {
+            <img class="company-logo" src="/merchant-logos/@merchant.Id" alt="" />
+        }
+        else
+        {
+            <span class="company-icon">PP</span>
+        }
+    </text>;
+
+    private RenderFragment RecentActivityPanel() => @<article class="card flush">
+        <div class="card-title"><h2>Recent Activity</h2></div>
+        <div class="list">
+            @if (model!.RecentActivity.Count == 0)
+            {
+                <div class="empty-state muted">Activity appears here as work is completed.</div>
+            }
+            @foreach (var activity in model.RecentActivity)
+            {
+                <a class="list-row" href="@ActivityUrl(activity)">
+                    <span class="timeline-dot complete"></span>
+                    <span class="list-row-main">
+                        <h3>@activity.Title</h3>
+                        <p>@activity.Description</p>
+                        <small class="muted">@activity.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy h:mm tt")</small>
+                    </span>
+                </a>
+            }
+        </div>
+    </article>;
 }

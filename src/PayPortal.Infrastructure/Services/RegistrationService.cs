@@ -64,9 +64,9 @@ internal sealed class RegistrationService(
             ],
             KycMilestones =
             [
-                Milestone("profile", "Complete Company Profile", "Provide the company, contact, and registered address information.", true),
+                Milestone("profile", "Complete Company Profile", "Review and save the editable profile with company, contact, and registered address details.", false),
                 Milestone("documents", "Upload Required Documents", "Upload the incorporation, tax registration, and director identity documents.", false),
-                Milestone("review", "Compliance Review", "An administrator checks the company details and uploaded evidence.", false),
+                Milestone("review", "Compliance Review", "Starts after required documents are uploaded; an administrator checks the company details and evidence.", false),
                 Milestone("approval", "Application Approval", "The application is approved after compliance review succeeds.", false)
             ]
         };

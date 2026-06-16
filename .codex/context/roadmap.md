@@ -19,9 +19,12 @@
 11. Add PayPortal branding, light/dark themes, a useful account menu, corrected
     typography and spacing, and role-appropriate navigation.
 12. Refresh demo and technical documentation for all feedback changes.
+13. Implement Post Implementation Feedback 2: compact typography, role-specific
+    dashboards, Compliance Queue positioning, corrected milestone semantics,
+    grouped KYC document requirements, feature suggestions, and admin charts.
 
 ## Next
 
-13. Add unit, integration, authorization, and browser tests.
-14. Add production email, private object storage, malware scanning, MFA, CI,
+14. Add unit, integration, authorization, and browser tests.
+15. Add production email, private object storage, malware scanning, MFA, CI,
     observability, and deployment configuration.

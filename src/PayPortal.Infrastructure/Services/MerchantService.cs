@@ -52,7 +52,12 @@ internal sealed class MerchantService(
         if (currentUser.IsAdmin && merchantId.HasValue)
         {
             merchant = await merchants.GetAsync(merchantId.Value, cancellationToken);
+            var profileChanged = SynchronizeProfileMilestone(merchant);
             await SynchronizeDocumentMilestoneAsync(merchant, cancellationToken);
+            if (profileChanged)
+            {
+                await merchants.SaveChangesAsync(cancellationToken);
+            }
             return merchant;
         }
 
@@ -62,7 +67,12 @@ internal sealed class MerchantService(
             throw new UnauthorizedAccessException("The merchant is not accessible.");
         }
 
+        var ownedProfileChanged = SynchronizeProfileMilestone(owned);
         await SynchronizeDocumentMilestoneAsync(owned, cancellationToken);
+        if (ownedProfileChanged)
+        {
+            await merchants.SaveChangesAsync(cancellationToken);
+        }
         return owned;
     }
 
@@ -70,7 +80,8 @@ internal sealed class MerchantService(
     {
         var list = await ListAsync(null, null, null, cancellationToken: cancellationToken);
         var decided = list.Count(x => x.Status is MerchantStatus.Approved or MerchantStatus.Rejected);
-        var merchantId = currentUser.IsAdmin ? null : list.SingleOrDefault()?.Id;
+        var currentMerchant = currentUser.IsAdmin ? null : list.SingleOrDefault();
+        var merchantId = currentMerchant?.Id;
         var recentActivity = await activities.ListRecentAsync(merchantId, 8, cancellationToken);
         return new DashboardModel(
             list.Count,
@@ -81,6 +92,7 @@ internal sealed class MerchantService(
             list.Count(x => x.RiskLevel == RiskLevel.High),
             decided == 0 ? 0 : decimal.Round(
                 list.Count(x => x.Status == MerchantStatus.Approved) * 100m / decided, 1),
+            currentMerchant,
             list.Where(x => x.Status is MerchantStatus.Pending or MerchantStatus.UnderReview)
                 .Take(5).ToList(),
             recentActivity.Select(ToDashboardActivity).ToList());
@@ -130,6 +142,8 @@ internal sealed class MerchantService(
             EntityId = merchant.Id.ToString(),
             Details = merchant.CompanyName
         }, cancellationToken);
+
+        CompleteProfileMilestone(merchant);
         await merchants.SaveChangesAsync(cancellationToken);
     }
 
@@ -283,6 +297,42 @@ internal sealed class MerchantService(
         }
 
         await merchants.SaveChangesAsync(cancellationToken);
+    }
+
+    private static void CompleteProfileMilestone(Merchant merchant)
+    {
+        var milestone = merchant.KycMilestones.SingleOrDefault(x => x.Type == "profile");
+        if (milestone is null || milestone.IsCompleted)
+        {
+            return;
+        }
+
+        milestone.IsCompleted = true;
+        milestone.CompletedAtUtc = DateTime.UtcNow;
+    }
+
+    private static bool SynchronizeProfileMilestone(Merchant? merchant)
+    {
+        if (merchant is null)
+        {
+            return false;
+        }
+
+        var milestone = merchant.KycMilestones.SingleOrDefault(x => x.Type == "profile");
+        if (milestone is null)
+        {
+            return false;
+        }
+
+        var completedByProfileSave = merchant.Activities.Any(x => x.Action == "merchant_profile_updated");
+        if (completedByProfileSave == milestone.IsCompleted)
+        {
+            return false;
+        }
+
+        milestone.IsCompleted = completedByProfileSave;
+        milestone.CompletedAtUtc = completedByProfileSave ? DateTime.UtcNow : null;
+        return true;
     }
 
     private string RequireUser() =>

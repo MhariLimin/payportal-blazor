@@ -4,11 +4,11 @@
 @inject IMerchantService MerchantService
 @inject IReviewService ReviewService
 
-<PageTitle>Admin review - PayPortal</PageTitle>
+<PageTitle>Compliance Queue - PayPortal</PageTitle>
 
 <div class="page">
     <header class="page-header">
-        <div><h1>Admin Review</h1><p>Review merchant applications, inspect evidence, and record decisions.</p></div>
+        <div><h1>Compliance Queue</h1><p>Focused workspace for pending KYC decisions, evidence checks, and reviewer notes.</p></div>
         <span class="muted">@Pending.Count awaiting action</span>
     </header>
 
@@ -18,6 +18,9 @@
     }
 
     <section class="card flush">
+        <div class="card-title">
+            <div><h2>Decision Queue</h2><span class="muted">Applications appear here when they are pending or under compliance review.</span></div>
+        </div>
         <div class="list">
             @if (Pending.Count == 0)
             {
@@ -36,7 +39,7 @@
                     }
                     <span class="list-row-main">
                         <h3>@merchant.CompanyName</h3>
-                        <p>@(merchant.Industry ?? "Industry not provided") | @merchant.BusinessType | @merchant.KycDocuments.Count documents</p>
+                        <p>@(merchant.Industry ?? "Industry not provided") | @merchant.BusinessType | @DocumentReadiness(merchant)</p>
                     </span>
                     <StatusBadge Value="merchant.RiskLevel" />
                     <StatusBadge Value="merchant.Status" />
@@ -69,19 +72,25 @@
                     <div class="address-block"><strong>@contact.Name</strong><span>@(contact.Position ?? "Contact")</span><span>@contact.Email | @(contact.Phone ?? "No phone")</span></div>
                 }
 
-                <h3>Documents</h3>
+                <h3>Evidence Checklist</h3>
                 <div class="list bordered">
-                    @if (selected.KycDocuments.Count == 0)
+                    @foreach (var requirement in Requirements)
                     {
-                        <div class="list-row muted">No documents uploaded.</div>
-                    }
-                    @foreach (var document in selected.KycDocuments)
-                    {
+                        var document = selected.KycDocuments
+                            .Where(x => x.DocumentType == requirement.Type)
+                            .OrderByDescending(x => x.CreatedAtUtc)
+                            .FirstOrDefault();
                         <div class="list-row">
-                            <span class="company-icon">DOC</span>
-                            <span class="list-row-main"><h3>@document.DocumentName</h3><p>@Humanize(document.DocumentType)</p></span>
-                            <StatusBadge Value="document.Status" />
-                            <a class="button secondary" href="/kyc-documents/@document.Id/download">View or download</a>
+                            <span class="requirement-state">@(document is null ? "!" : document.Status == DocumentStatus.Verified ? "OK" : "...")</span>
+                            <span class="list-row-main">
+                                <h3>@requirement.Label</h3>
+                                <p>@(document is null ? "Missing upload" : $"{document.DocumentName} | {FormatBytes(document.FileSize)}")</p>
+                            </span>
+                            @if (document is not null)
+                            {
+                                <StatusBadge Value="document.Status" />
+                                <a class="button secondary" href="/kyc-documents/@document.Id/download">View or download</a>
+                            }
                         </div>
                     }
                 </div>
@@ -125,6 +134,12 @@
     private string? message;
     private bool success;
     private bool submitting;
+    private readonly (string Type, string Label)[] Requirements =
+    [
+        ("business_registration", "Certificate of Incorporation"),
+        ("tax_certificate", "Tax Registration Certificate"),
+        ("id_document", "Director ID Document")
+    ];
     private IReadOnlyList<Merchant> Pending => merchants
         .Where(x => x.Status is MerchantStatus.Pending or MerchantStatus.UnderReview)
         .ToList();
@@ -179,12 +194,6 @@
     private async Task RefreshAsync() =>
         merchants = await MerchantService.ListAsync(null, null, null);
 
-    private static string Humanize(string value)
-    {
-        var text = value.Replace('_', ' ');
-        return char.ToUpperInvariant(text[0]) + text[1..];
-    }
-
     private static string FormatStatus(MerchantStatus status) =>
         status == MerchantStatus.UnderReview ? "Under Review" : status.ToString();
 
@@ -192,4 +201,13 @@
         decision == ReviewDecision.MoreInformationRequired
             ? "More Information Required"
             : decision.ToString();
+
+    private string DocumentReadiness(Merchant merchant)
+    {
+        var uploaded = Requirements.Count(x => merchant.KycDocuments.Any(document => document.DocumentType == x.Type));
+        return $"{uploaded}/{Requirements.Length} required documents";
+    }
+
+    private static string FormatBytes(long bytes) =>
+        bytes >= 1024 * 1024 ? $"{bytes / 1024d / 1024d:F1} MB" : $"{bytes / 1024d:F1} KB";
 }
