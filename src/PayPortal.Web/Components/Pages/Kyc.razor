@@ -82,7 +82,7 @@ else
             <article class="card">
                 <h2>Verification Milestones</h2>
                 <div class="timeline">
-                    @foreach (var milestone in merchant.KycMilestones.OrderBy(x => x.CreatedAtUtc))
+                    @foreach (var milestone in merchant.KycMilestones.OrderBy(MilestoneSort))
                     {
                         <div class="timeline-item">
                             <span class="timeline-dot @(milestone.IsCompleted ? "complete" : "")"></span>
@@ -280,6 +280,16 @@ else
                 "approval" => "The application is approved after compliance review succeeds.",
                 _ => "Complete this onboarding step."
             };
+
+    private static int MilestoneSort(KycMilestone milestone) =>
+        milestone.Type switch
+        {
+            "profile" => 1,
+            "documents" => 2,
+            "review" => 3,
+            "approval" => 4,
+            _ => 99
+        };
 
     private int RequiredDocumentCount()
     {

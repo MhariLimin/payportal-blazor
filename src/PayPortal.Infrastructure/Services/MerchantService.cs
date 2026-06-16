@@ -230,6 +230,15 @@ internal sealed class MerchantService(
             "application_ready_for_review" => (
                 "Application ready for review",
                 $"{subject} submitted all required KYC documents."),
+            "compliance_review_completed" => (
+                "Compliance review completed",
+                $"An administrator completed compliance review for {subject}."),
+            "kyc_document_verified" => (
+                "KYC document verified",
+                $"An administrator verified {Humanize(activity.Details ?? "a KYC document")} for {subject}."),
+            "kyc_document_rejected" => (
+                "KYC document rejected",
+                $"An administrator rejected {Humanize(activity.Details ?? "a KYC document")} for {subject}."),
             "application_approved" => (
                 "Application approved",
                 $"{subject} was approved by an administrator."),

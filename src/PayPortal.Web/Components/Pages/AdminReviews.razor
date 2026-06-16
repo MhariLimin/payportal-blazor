@@ -91,6 +91,8 @@
                             {
                                 <StatusBadge Value="document.Status" />
                                 <a class="button secondary" href="/kyc-documents/@document.Id/download">View or download</a>
+                                <button class="button secondary" disabled="@submitting" @onclick="() => ReviewDocumentAsync(document.Id, DocumentStatus.Verified)">Verify</button>
+                                <button class="button danger" disabled="@submitting" @onclick="() => ReviewDocumentAsync(document.Id, DocumentStatus.Rejected)">Reject</button>
                             }
                         </div>
                     }
@@ -110,6 +112,9 @@
                 }
 
                 <h3>Decision</h3>
+                <div class="alert">
+                    Complete Compliance Review after required documents are present and evidence has been checked. Approval is a separate final decision.
+                </div>
                 <div class="decision-grid">
                     <button class="decision approved @(decision == ReviewDecision.Approved ? "selected" : "")" @onclick="() => decision = ReviewDecision.Approved">Approve</button>
                     <button class="decision rejected @(decision == ReviewDecision.Rejected ? "selected" : "")" @onclick="() => decision = ReviewDecision.Rejected">Reject</button>
@@ -120,6 +125,7 @@
             </div>
             <div class="modal-actions">
                 <button class="button secondary" @onclick="Close">Cancel</button>
+                <button class="button secondary" disabled="@submitting" @onclick="CompleteComplianceAsync">Complete Compliance Review</button>
                 <button class="button primary" disabled="@submitting" @onclick="SubmitAsync">@(submitting ? "Submitting..." : "Submit Decision")</button>
             </div>
         </section>
@@ -192,6 +198,73 @@
         }
     }
 
+    private async Task CompleteComplianceAsync()
+    {
+        if (selected is null || string.IsNullOrWhiteSpace(notes))
+        {
+            success = false;
+            message = "Reviewer notes are required to complete compliance review.";
+            return;
+        }
+
+        submitting = true;
+        try
+        {
+            await ReviewService.CompleteComplianceReviewAsync(selected.Id, notes);
+            success = true;
+            message = $"Compliance review completed for {selected.CompanyName}.";
+            await RefreshAsync();
+            selected = merchants.SingleOrDefault(x => x.Id == selected.Id);
+        }
+        catch (Exception exception) when (exception is InvalidOperationException or UnauthorizedAccessException)
+        {
+            success = false;
+            message = exception.Message;
+        }
+        finally
+        {
+            submitting = false;
+        }
+    }
+
+    private async Task ReviewDocumentAsync(Guid documentId, DocumentStatus status)
+    {
+        if (selected is null)
+        {
+            return;
+        }
+
+        if (status == DocumentStatus.Rejected && string.IsNullOrWhiteSpace(notes))
+        {
+            success = false;
+            message = "Reviewer notes are required when rejecting a document.";
+            return;
+        }
+
+        submitting = true;
+        try
+        {
+            var reviewNotes = status == DocumentStatus.Verified
+                ? string.IsNullOrWhiteSpace(notes) ? "Document verified." : notes
+                : notes;
+            await ReviewService.ReviewDocumentAsync(documentId, new DocumentReviewRequest(status, reviewNotes));
+            success = true;
+            message = status == DocumentStatus.Verified ? "Document verified." : "Document rejected.";
+            var selectedId = selected.Id;
+            await RefreshAsync();
+            selected = merchants.SingleOrDefault(x => x.Id == selectedId);
+        }
+        catch (Exception exception) when (exception is InvalidOperationException or UnauthorizedAccessException)
+        {
+            success = false;
+            message = exception.Message;
+        }
+        finally
+        {
+            submitting = false;
+        }
+    }
+
     private async Task RefreshAsync() =>
         merchants = await MerchantService.ListAsync(null, null, null);
 
@@ -199,9 +272,12 @@
         status == MerchantStatus.UnderReview ? "Under Review" : status.ToString();
 
     private static string FormatDecision(ReviewDecision decision) =>
-        decision == ReviewDecision.MoreInformationRequired
-            ? "More Information Required"
-            : decision.ToString();
+        decision switch
+        {
+            ReviewDecision.MoreInformationRequired => "More Information Required",
+            ReviewDecision.ComplianceReviewed => "Compliance Reviewed",
+            _ => decision.ToString()
+        };
 
     private string DocumentReadiness(Merchant merchant)
     {

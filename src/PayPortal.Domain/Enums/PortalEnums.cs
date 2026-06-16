@@ -13,4 +13,4 @@ public enum MerchantStatus
 public enum RiskLevel { Low, Medium, High }
 public enum DocumentStatus { Pending, Verified, Rejected }
 public enum CredentialEnvironment { Sandbox, Production }
-public enum ReviewDecision { Approved, Rejected, MoreInformationRequired }
+public enum ReviewDecision { Approved, Rejected, MoreInformationRequired, ComplianceReviewed }

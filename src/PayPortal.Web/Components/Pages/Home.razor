@@ -115,7 +115,7 @@ else
                         <article class="card flush">
                             <div class="card-title"><h2>Next Steps</h2><span class="muted">@NextStep(merchant)</span></div>
                             <div class="list">
-                                @foreach (var milestone in merchant.KycMilestones.OrderBy(x => x.CreatedAtUtc))
+                                @foreach (var milestone in merchant.KycMilestones.OrderBy(MilestoneSort))
                                 {
                                     <a class="list-row" href="@MilestoneUrl(milestone)">
                                         <span class="timeline-dot @(milestone.IsCompleted ? "complete" : "")"></span>
@@ -228,6 +228,16 @@ else
 
     private static string MilestoneUrl(KycMilestone milestone) =>
         milestone.Type == "profile" ? "/merchant/profile" : "/kyc";
+
+    private static int MilestoneSort(KycMilestone milestone) =>
+        milestone.Type switch
+        {
+            "profile" => 1,
+            "documents" => 2,
+            "review" => 3,
+            "approval" => 4,
+            _ => 99
+        };
 
     private static string MilestoneDescription(KycMilestone milestone) =>
         milestone.Type switch

@@ -111,3 +111,5 @@ public sealed record IssuedCredential(
     CredentialEnvironment Environment);
 
 public sealed record ReviewRequest(ReviewDecision Decision, string Notes);
+
+public sealed record DocumentReviewRequest(DocumentStatus Status, string Notes);

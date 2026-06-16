@@ -197,6 +197,101 @@ internal sealed class ReviewService(
     PortalDbContext dbContext,
     ICurrentUser currentUser) : IReviewService
 {
+    public async Task ReviewDocumentAsync(
+        Guid documentId,
+        DocumentReviewRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (!currentUser.IsAdmin)
+        {
+            throw new UnauthorizedAccessException("Administrator access required.");
+        }
+
+        if (request.Status is not (DocumentStatus.Verified or DocumentStatus.Rejected))
+        {
+            throw new InvalidOperationException("Documents can only be verified or rejected by an administrator.");
+        }
+
+        if (request.Status == DocumentStatus.Rejected && string.IsNullOrWhiteSpace(request.Notes))
+        {
+            throw new InvalidOperationException("Rejection notes are required.");
+        }
+
+        var document = await dbContext.KycDocuments.SingleOrDefaultAsync(
+            x => x.Id == documentId, cancellationToken)
+            ?? throw new InvalidOperationException("Document not found.");
+
+        document.Status = request.Status;
+        document.ReviewerNotes = Clean(request.Notes);
+        document.RejectionReason = request.Status == DocumentStatus.Rejected
+            ? request.Notes.Trim()
+            : null;
+        document.ReviewedAtUtc = DateTime.UtcNow;
+        document.ReviewedByUserId = currentUser.UserId;
+
+        dbContext.ActivityEntries.Add(new ActivityEntry
+        {
+            MerchantId = document.MerchantId,
+            ActorUserId = currentUser.UserId!,
+            Action = request.Status == DocumentStatus.Verified
+                ? "kyc_document_verified"
+                : "kyc_document_rejected",
+            EntityType = nameof(KycDocument),
+            EntityId = document.Id.ToString(),
+            Details = document.DocumentType
+        });
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task CompleteComplianceReviewAsync(
+        Guid merchantId,
+        string notes,
+        CancellationToken cancellationToken = default)
+    {
+        if (!currentUser.IsAdmin)
+        {
+            throw new UnauthorizedAccessException("Administrator access required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(notes))
+        {
+            throw new InvalidOperationException("Compliance review notes are required.");
+        }
+
+        var merchant = await dbContext.Merchants
+            .Include(x => x.KycDocuments)
+            .SingleOrDefaultAsync(x => x.Id == merchantId, cancellationToken)
+            ?? throw new InvalidOperationException("Merchant not found.");
+
+        var requiredTypes = new[] { "business_registration", "tax_certificate", "id_document" };
+        if (!requiredTypes.All(type => merchant.KycDocuments.Any(x => x.DocumentType == type)))
+        {
+            throw new InvalidOperationException("All required documents must be uploaded before compliance review can be completed.");
+        }
+
+        await SetMilestoneAsync(merchantId, "review", true, cancellationToken);
+        merchant.Status = MerchantStatus.UnderReview;
+        merchant.UpdatedAtUtc = DateTime.UtcNow;
+
+        dbContext.ApplicationReviews.Add(new ApplicationReview
+        {
+            MerchantId = merchantId,
+            ReviewerUserId = currentUser.UserId!,
+            ReviewType = "compliance_review",
+            Notes = notes.Trim(),
+            Decision = ReviewDecision.ComplianceReviewed
+        });
+        dbContext.ActivityEntries.Add(new ActivityEntry
+        {
+            MerchantId = merchantId,
+            ActorUserId = currentUser.UserId!,
+            Action = "compliance_review_completed",
+            EntityType = nameof(Merchant),
+            EntityId = merchantId.ToString()
+        });
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task ReviewAsync(
         Guid merchantId,
         ReviewRequest request,
@@ -284,4 +379,7 @@ internal sealed class ReviewService(
         milestone.IsCompleted = complete;
         milestone.CompletedAtUtc = complete ? DateTime.UtcNow : null;
     }
+
+    private static string? Clean(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }
