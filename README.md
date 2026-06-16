@@ -2,7 +2,8 @@
 
 PayPortal is a native ASP.NET Core 8 Blazor Server merchant onboarding portal.
 It supports merchant registration, KYC uploads, application review, approval
-tracking, and secure API credential issuance.
+tracking, secure API credential issuance, activity timelines, document request
+workflows, risk rules, API usage reporting, and admin operations pages.
 
 ## Stack
 
@@ -53,5 +54,6 @@ merchant registration.
 - [Implementation plan](docs/implementation-plan.md)
 - [Demo guide](docs/demo-guide.md)
 - [Feature and UI testing](docs/feature-testing-guide.md)
+- [Post Implementation Feedback 4](docs/post-implementation-feedback-4.md)
 - [Logo generation prompt](docs/logo-generation-prompt.md)
 - [Setup](docs/setup.md)

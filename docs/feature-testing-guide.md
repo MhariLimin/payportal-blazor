@@ -85,14 +85,15 @@ being sent through email.
 2. Open `/`.
 3. Review onboarding progress, uploaded documents, verified documents, and API
    credential count.
-4. Review Next Steps, recent documents, account readiness, and recent activity.
+4. Review Next Steps, recent documents, account readiness, and operational
+   access.
 
 Expected: a Merchant sees a dashboard focused on its own application rather
 than the administrator's portfolio metrics.
 
 ## 6. Merchant Profile
 
-1. Select `Merchant Profile` in the sidebar.
+1. Open the top-right profile dropdown and select `Profile`.
 2. Confirm company name, business type, tax ID, contact, and registered address
    match registration values.
 3. Confirm application date, status, risk level, and onboarding progress are
@@ -129,8 +130,9 @@ stored outside the public web root with generated storage names.
 ## 8. Administrator Dashboard and Navigation
 
 1. Log out and sign in as the seeded administrator.
-2. Confirm the sidebar shows `Applications`, `Merchant Directory`, and
-   `Activity`.
+2. Confirm the sidebar shows `Applications`, `Merchant Directory`, `Activity`,
+   `Risk Rules`, `Document Requests`, `Timeline`, `API Usage`,
+   `Admin Settings`, and `Reports`.
 3. Confirm it does not show Merchant Profile, KYC Verification, or API
    Credentials.
 4. Open the dashboard and review aggregate statistics, funnel bars, decision
@@ -149,7 +151,8 @@ Expected: Admin sees portal-wide data and Admin-only navigation.
 6. Filter by business type and industry.
 7. Combine multiple filters.
 8. Select `View profile`.
-9. Return and select `Review` to open that merchant in Applications.
+9. Confirm there is no `Review` button in Merchant Directory.
+10. Open `Applications` to perform all review actions.
 
 Expected: the list updates immediately and links open the selected merchant's
 profile or preselected compliance decision dialog.
@@ -286,7 +289,7 @@ cross-role and cross-merchant access.
 Expected: document statuses update independently from final approval, and
 Compliance Review can be completed before the final approve/reject decision.
 
-## 19. Activity, Notifications, and Audit Logs
+## 19. Activity, Notifications, and Timelines
 
 Admin checks:
 
@@ -294,18 +297,38 @@ Admin checks:
 2. Filter by merchant, actor text, action type, and date range.
 3. Confirm dashboard funnel/chart links open `Merchant Directory` with matching
    query filters.
-4. Open a merchant profile and review `Application Audit Log`.
+4. Open `Timeline` and filter by merchant.
 
 Merchant checks:
 
 1. Sign in as a Merchant.
-2. Open `Notifications`.
-3. Confirm only that merchant's requests, review updates, and next actions are
-   listed.
+2. Select the notification icon beside the top-right user logo.
+3. Confirm the modal shows only that merchant's requests, review updates, and
+   next actions.
+4. Open `My Activity` and confirm only that merchant's own activity plus admin
+   interactions for that merchant are listed.
+5. Confirm the Merchant Profile no longer repeats the audit log.
+
+## 20. Feedback 4 Operational Pages
+
+1. Open `Risk Rules` as Admin and confirm the rule cards and high-risk queue
+   are visible.
+2. Open `Document Requests` as Admin and Merchant. Confirm rejected documents
+   and missing required evidence appear as tasks.
+3. Open `Timeline` and confirm events are chronological.
+4. Open `API Usage` and confirm credential telemetry, request estimates, error
+   rate, and webhook status are visible.
+5. Open `Admin Settings` and confirm file controls, document requirements,
+   password guidance, and SLA targets are visible.
+6. Open `Reports` and confirm conversion, approval rate, rejection reason, and
+   document completeness summaries are visible.
+7. On `Applications`, select multiple rows and use `Export selected`.
+8. On `Applications`, save an internal admin note and confirm it appears only
+   in the admin review modal, not the merchant KYC timeline.
 
 ## Remaining Development-Only Behavior
 
 - Password reset links are displayed instead of delivered by email.
-- Webhook management is not implemented.
-- KYC files use private local disk storage rather than production object
-  storage and malware scanning.
+- Webhook management uses demo telemetry only.
+- KYC files use private local disk storage. The UI now shows production scan
+  readiness, but no external malware scanning vendor is connected.

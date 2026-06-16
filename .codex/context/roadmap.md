@@ -27,9 +27,13 @@
     document status actions, separate compliance review, admin activity
     filters, merchant notifications, chart drill-downs, application audit logs,
     and more feature suggestions.
+15. Implement Post Implementation Feedback 4: Merchant Directory review removal,
+    top-right notification modal, merchant profile dropdown placement,
+    dedicated merchant activity, operations pages, internal admin notes, risk
+    scoring, bulk selection/export messaging, and documentation refresh.
 
 ## Next
 
-15. Add unit, integration, authorization, and browser tests.
-16. Add production email, private object storage, malware scanning, MFA, CI,
+16. Add unit, integration, authorization, and browser tests.
+17. Add production email, private object storage, malware scanning, MFA, CI,
     observability, and deployment configuration.

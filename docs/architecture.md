@@ -33,6 +33,19 @@ Account forms use static server rendering because Identity must set cookies in
 an HTTP response. Authenticated pages use Interactive Server rendering for
 filters, uploads, dialogs, and review actions without a JavaScript SPA.
 
+## Route Roles
+
+- Admin review work happens in `Applications`; Merchant Directory is read-only
+  inspection and filtering.
+- Merchant notifications are opened from the top-right notification icon as a
+  modal.
+- Merchant Profile is in the top-right account dropdown for merchants and is
+  still inspectable by admins through `/merchants/{id}`.
+- Merchant activity moved to `My Activity`; admin activity remains the
+  portal-wide `Activity` page.
+- Operations pages cover Risk Rules, Document Requests, Timeline, API Usage,
+  Admin Settings, and Reports.
+
 ## Patterns
 
 - Repository Pattern: merchant and activity persistence contracts.

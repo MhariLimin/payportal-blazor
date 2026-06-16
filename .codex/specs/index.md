@@ -26,3 +26,6 @@
 14. `resolved/14-feedback-3-ui-and-admin-pages.md`
 15. `resolved/15-feedback-3-review-actions.md`
 16. `resolved/16-feedback-3-activity-notifications-audit.md`
+17. `resolved/17-feedback-4-navigation-and-notifications.md`
+18. `resolved/18-feedback-4-operations-pages.md`
+19. `resolved/19-feedback-4-review-workflow-improvements.md`

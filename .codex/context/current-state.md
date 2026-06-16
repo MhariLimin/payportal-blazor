@@ -27,8 +27,13 @@ captured in the migration specification and Git history.
 - KYC document requirements are grouped with matching uploads in the main KYC
   document card.
 - Merchant-aware activity descriptions, admin activity filters, merchant
-  notifications, application audit logs, and detail breadcrumbs.
+  notification modal, dedicated merchant activity, timelines, and detail
+  breadcrumbs.
 - PayPortal branding with persistent light, dark, and system themes.
+- Feedback 4 operations workspace: review-only Applications, read-only
+  Merchant Directory, Risk Rules, Document Requests, Timeline, API Usage,
+  Admin Settings, Reports, internal admin notes, bulk selection/export
+  messaging, and file scan readiness indicators.
 
 ## Verification
 
@@ -44,4 +49,7 @@ captured in the migration specification and Git history.
   authenticated admin filters, and role-specific navigation are route tested.
 - Feedback 3 UI density, admin page split, document review, compliance review,
   activity filters, notifications, drill-downs, and audit logs are implemented.
+- Feedback 4 navigation, notification modal, merchant activity page,
+  operations pages, review workflow improvements, and documentation updates
+  are implemented.
 - Automated tests remain future work.
