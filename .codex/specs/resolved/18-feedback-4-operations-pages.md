@@ -7,7 +7,7 @@ Implemented the approved relevant pages from
 
 - `Risk Rules`
 - `Document Requests`
-- `Timeline`
+- `Timeline` (removed by Feedback 5 because it duplicated Activity)
 - `API Usage`
 - `Admin Settings`
 - `Reports`
@@ -20,7 +20,8 @@ merchant data through existing service authorization.
 
 - `src/PayPortal.Web/Components/Pages/RiskRules.razor`
 - `src/PayPortal.Web/Components/Pages/DocumentRequests.razor`
-- `src/PayPortal.Web/Components/Pages/MerchantTimeline.razor`
+- `src/PayPortal.Web/Components/Pages/MerchantTimeline.razor` (removed by
+  Feedback 5)
 - `src/PayPortal.Web/Components/Pages/ApiUsage.razor`
 - `src/PayPortal.Web/Components/Pages/AdminSettings.razor`
 - `src/PayPortal.Web/Components/Pages/Reports.razor`

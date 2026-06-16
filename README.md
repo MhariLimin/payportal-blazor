@@ -55,5 +55,6 @@ merchant registration.
 - [Demo guide](docs/demo-guide.md)
 - [Feature and UI testing](docs/feature-testing-guide.md)
 - [Post Implementation Feedback 4](docs/post-implementation-feedback-4.md)
+- [Post Implementation Feedback 5](docs/post-implementation-feedback-5.md)
 - [Logo generation prompt](docs/logo-generation-prompt.md)
 - [Setup](docs/setup.md)

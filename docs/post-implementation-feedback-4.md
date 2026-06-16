@@ -10,10 +10,12 @@ onboarding workflow.
 - Replaced the merchant Notifications page with a top-right notification icon
   and modal.
 - Moved Merchant Profile into the top-right account dropdown for merchants.
-- Moved merchant recent activity into `My Activity` and removed duplicate audit
-  history from Merchant Profile.
+- Moved merchant recent activity out of the dashboard and removed duplicate
+  audit history from Merchant Profile. Feedback 5 later renamed this to
+  `Activity`.
 - Added operational pages: `Risk Rules`, `Document Requests`, `Timeline`,
-  `API Usage`, `Admin Settings`, and `Reports`.
+  `API Usage`, `Admin Settings`, and `Reports`. Feedback 5 later removed the
+  separate Timeline page because it duplicated Activity.
 - Added internal admin notes on Applications while hiding those notes from the
   merchant-facing KYC timeline.
 - Added bulk selection/export messaging on Applications.
@@ -29,7 +31,8 @@ The new pages are designed to make the app easier to explain in an interview:
 - `Risk Rules` shows how risk can be automated from onboarding signals.
 - `Document Requests` turns missing or rejected documents into clear merchant
   tasks.
-- `Timeline` explains auditability without crowding the Merchant Profile.
+- `Timeline` originally explained auditability without crowding the Merchant
+  Profile; Feedback 5 folded that purpose into Activity.
 - `API Usage` shows operational thinking beyond issuing keys.
 - `Admin Settings` centralizes policy configuration.
 - `Reports` summarizes conversion and review health.

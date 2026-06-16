@@ -31,9 +31,14 @@
     top-right notification modal, merchant profile dropdown placement,
     dedicated merchant activity, operations pages, internal admin notes, risk
     scoring, bulk selection/export messaging, and documentation refresh.
+16. Implement Post Implementation Feedback 5: grouped workspace navigation,
+    Themes and Admin Settings in the user dropdown, simplified notification
+    modal, removed Timeline, merchant Activity rename, KYC-owned document
+    request/resubmission actions, grouped admin document requests, and
+    documentation refresh.
 
 ## Next
 
-16. Add unit, integration, authorization, and browser tests.
-17. Add production email, private object storage, malware scanning, MFA, CI,
+17. Add unit, integration, authorization, and browser tests.
+18. Add production email, private object storage, malware scanning, MFA, CI,
     observability, and deployment configuration.

@@ -11,7 +11,8 @@ feel more like a production merchant onboarding system.
    reviewer their queue.
 3. **Document Request Center:** implemented as `Document Requests` for missing
    and rejected evidence tasks.
-4. **Merchant Timeline:** implemented as `Timeline`.
+4. **Merchant Timeline:** superseded by the focused merchant `Activity` page in
+   Feedback 5 to avoid duplicate activity views.
 5. **API Usage:** implemented with demo credential telemetry.
 6. **Admin Settings:** implemented with document, file, password, and SLA
    policy summaries.

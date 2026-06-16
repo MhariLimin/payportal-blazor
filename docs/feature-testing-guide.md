@@ -130,14 +130,16 @@ stored outside the public web root with generated storage names.
 ## 8. Administrator Dashboard and Navigation
 
 1. Log out and sign in as the seeded administrator.
-2. Confirm the sidebar shows `Applications`, `Merchant Directory`, `Activity`,
-   `Risk Rules`, `Document Requests`, `Timeline`, `API Usage`,
-   `Admin Settings`, and `Reports`.
-3. Confirm it does not show Merchant Profile, KYC Verification, or API
+2. Confirm the sidebar shows grouped `Onboarding` options for Applications and
+   Document Requests.
+3. Confirm the sidebar shows grouped `Monitoring` options for Risk Rules, API
+   Usage, and Reports.
+4. Confirm `Admin Settings` is in the top-right user dropdown, not the sidebar.
+5. Confirm it does not show Merchant Profile, KYC Verification, or API
    Credentials.
-4. Open the dashboard and review aggregate statistics, funnel bars, decision
+6. Open the dashboard and review aggregate statistics, funnel bars, decision
    mix chart, risk attention, pending approvals, and recent activity.
-5. Confirm activity descriptions identify which merchant performed the action.
+7. Confirm activity descriptions identify which merchant performed the action.
 
 Expected: Admin sees portal-wide data and Admin-only navigation.
 
@@ -273,9 +275,10 @@ cross-role and cross-merchant access.
 
 1. Confirm PayPortal artwork appears on account and authenticated screens.
 2. Open the user menu from the top-right avatar or company logo.
-3. Switch between Light, Dark, and System themes.
-4. Reload the browser and confirm the selected theme persists.
-5. Confirm logout is available inside the same dropdown.
+3. Confirm Light, Dark, and System are grouped under `Themes`.
+4. Switch between Light, Dark, and System themes.
+5. Reload the browser and confirm the selected theme persists.
+6. Confirm logout is available inside the same dropdown.
 
 ## 18. Admin Document Review and Compliance Review
 
@@ -289,7 +292,7 @@ cross-role and cross-merchant access.
 Expected: document statuses update independently from final approval, and
 Compliance Review can be completed before the final approve/reject decision.
 
-## 19. Activity, Notifications, and Timelines
+## 19. Activity and Notifications
 
 Admin checks:
 
@@ -297,33 +300,37 @@ Admin checks:
 2. Filter by merchant, actor text, action type, and date range.
 3. Confirm dashboard funnel/chart links open `Merchant Directory` with matching
    query filters.
-4. Open `Timeline` and filter by merchant.
 
 Merchant checks:
 
 1. Sign in as a Merchant.
 2. Select the notification icon beside the top-right user logo.
-3. Confirm the modal shows only that merchant's requests, review updates, and
-   next actions.
-4. Open `My Activity` and confirm only that merchant's own activity plus admin
+3. Confirm the icon is bell-shaped.
+4. Confirm the modal opens lower in the viewport and shows only action-required
+   items, not recent activity.
+5. Click outside the modal and confirm it closes.
+6. Open `Activity` and confirm only that merchant's own activity plus admin
    interactions for that merchant are listed.
-5. Confirm the Merchant Profile no longer repeats the audit log.
+7. Confirm the Merchant Profile no longer repeats the audit log.
 
-## 20. Feedback 4 Operational Pages
+## 20. Document Requests and Operational Pages
 
 1. Open `Risk Rules` as Admin and confirm the rule cards and high-risk queue
    are visible.
-2. Open `Document Requests` as Admin and Merchant. Confirm rejected documents
-   and missing required evidence appear as tasks.
-3. Open `Timeline` and confirm events are chronological.
-4. Open `API Usage` and confirm credential telemetry, request estimates, error
+2. Open `Document Requests` as Admin and confirm merchants appear as grouped
+   sections with dropdowns for missing or rejected documents.
+3. Sign in as Merchant and open `KYC Verification`.
+4. Confirm missing document requests appear under `Document Requirements`.
+5. Reject a document as Admin, then confirm the merchant KYC page marks the
+   rejected upload and shows a `Resubmit` action in the same requirement row.
+6. Open `API Usage` and confirm credential telemetry, request estimates, error
    rate, and webhook status are visible.
-5. Open `Admin Settings` and confirm file controls, document requirements,
-   password guidance, and SLA targets are visible.
-6. Open `Reports` and confirm conversion, approval rate, rejection reason, and
+7. Open `Admin Settings` from the user dropdown and confirm file controls,
+   document requirements, password guidance, and SLA targets are visible.
+8. Open `Reports` and confirm conversion, approval rate, rejection reason, and
    document completeness summaries are visible.
-7. On `Applications`, select multiple rows and use `Export selected`.
-8. On `Applications`, save an internal admin note and confirm it appears only
+9. On `Applications`, select multiple rows and use `Export selected`.
+10. On `Applications`, save an internal admin note and confirm it appears only
    in the admin review modal, not the merchant KYC timeline.
 
 ## Remaining Development-Only Behavior

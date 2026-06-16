@@ -41,10 +41,13 @@ filters, uploads, dialogs, and review actions without a JavaScript SPA.
   modal.
 - Merchant Profile is in the top-right account dropdown for merchants and is
   still inspectable by admins through `/merchants/{id}`.
-- Merchant activity moved to `My Activity`; admin activity remains the
-  portal-wide `Activity` page.
-- Operations pages cover Risk Rules, Document Requests, Timeline, API Usage,
-  Admin Settings, and Reports.
+- Merchant activity is the merchant-owned `Activity` page; admin activity
+  remains the portal-wide `Activity` page.
+- Merchant document requests and resubmissions live inside the KYC document
+  requirements card.
+- Admin Document Requests groups missing/rejected documents by merchant.
+- Operations pages cover Risk Rules, API Usage, Admin Settings, and Reports.
+- Admin Settings and theme choices live in the top-right account dropdown.
 
 ## Patterns
 

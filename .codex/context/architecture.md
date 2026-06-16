@@ -42,14 +42,17 @@ Domain; Application depends only on Domain; Domain has no project dependency.
 | `KYCVerification.tsx` | `/kyc` and `/merchants/{id}/kyc` | Owner or Admin |
 | `APICredentials.tsx` | `/api-credentials` | Approved Merchant |
 | `AdminReview.tsx` | `/applications` and legacy `/admin/reviews` | Admin |
-| Operations pages | `/risk-rules`, `/document-requests`, `/merchant-timeline`, `/api-usage`, `/admin-settings`, `/reports` | Role-specific |
+| Operations pages | `/risk-rules`, `/document-requests`, `/api-usage`, `/admin-settings`, `/reports` | Role-specific |
 
-## Feedback 4 Route Notes
+## Feedback 5 Route Notes
 
 - Merchant Directory is read-only inspection and filtering; all review actions
   are performed from Applications.
 - Merchant notifications are a top-right modal, not a route.
 - Merchant Profile is available from the top-right account dropdown for
   merchants and by `/merchants/{id}` for admin inspection.
-- `My Activity` is the merchant-owned activity stream; admin activity remains
-  `/activity`.
+- Merchant `Activity` is the owner-scoped stream; admin `/activity` is
+  portal-wide.
+- Merchant document requests and resubmissions are handled inside `/kyc`.
+- Admin `/document-requests` groups missing and rejected documents by merchant.
+- Admin Settings is available from the top-right user dropdown.

@@ -29,3 +29,5 @@
 17. `resolved/17-feedback-4-navigation-and-notifications.md`
 18. `resolved/18-feedback-4-operations-pages.md`
 19. `resolved/19-feedback-4-review-workflow-improvements.md`
+20. `resolved/20-feedback-5-workspace-navigation.md`
+21. `resolved/21-feedback-5-document-requests.md`
