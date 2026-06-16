@@ -35,23 +35,23 @@ else
                         <h2>Application Funnel</h2>
                         @foreach (var segment in Funnel())
                         {
-                            <div class="chart-row">
+                            <a class="chart-row" href="@DirectoryUrl(segment.Label)">
                                 <span>@segment.Label</span>
                                 <div class="chart-track"><span style="width: @BarWidth(segment.Value)%"></span></div>
                                 <strong>@segment.Value</strong>
-                            </div>
+                            </a>
                         }
                     </article>
                     <article class="card chart-card">
                         <h2>Decision Mix</h2>
-                        <div class="donut" style="--value:@model.ApprovalRate"><span>@model.ApprovalRate%</span></div>
+                        <a class="donut" href="/merchant-directory?status=Approved" style="--value:@model.ApprovalRate"><span>@model.ApprovalRate%</span></a>
                         <p class="muted">@model.Approved approved of @(model.Approved + model.Rejected) completed decisions.</p>
                     </article>
                     <article class="card chart-card">
                         <h2>Risk Attention</h2>
                         <div class="stat-value">@model.HighRisk</div>
                         <p class="muted">High-risk merchants requiring enhanced due diligence.</p>
-                        <a class="button secondary" href="/applications">Open Applications</a>
+                        <a class="button secondary" href="/merchant-directory?risk=High">View High Risk</a>
                     </article>
                 </section>
 
@@ -193,6 +193,15 @@ else
 
     private int BarWidth(int value) =>
         model!.TotalMerchants == 0 ? 0 : Math.Max(8, value * 100 / model.TotalMerchants);
+
+    private static string DirectoryUrl(string label) =>
+        label switch
+        {
+            "Under Review" => "/merchant-directory?status=UnderReview",
+            "Approved" => "/merchant-directory?status=Approved",
+            "Rejected" => "/merchant-directory?status=Rejected",
+            _ => "/merchant-directory?status=Pending"
+        };
 
     private static int MerchantProgress(Merchant merchant) =>
         merchant.KycMilestones.Count == 0

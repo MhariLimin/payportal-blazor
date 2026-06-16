@@ -81,6 +81,8 @@
 @code {
     private IReadOnlyList<Merchant> merchants = [];
     private string search = "";
+    [SupplyParameterFromQuery(Name = "status")] public string? StatusQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "risk")] public string? RiskQuery { get; set; }
     private string status = "";
     private string risk = "";
     private string businessType = "";
@@ -96,8 +98,12 @@
         .Where(x => string.IsNullOrWhiteSpace(industry) || x.Industry == industry)
         .ToList();
 
-    protected override async Task OnInitializedAsync() =>
+    protected override async Task OnParametersSetAsync()
+    {
+        status = StatusQuery ?? "";
+        risk = RiskQuery ?? "";
         merchants = await MerchantService.ListAsync(null, null, null);
+    }
 
     private static string Format(string value) =>
         value == "UnderReview" ? "Under Review" : value;

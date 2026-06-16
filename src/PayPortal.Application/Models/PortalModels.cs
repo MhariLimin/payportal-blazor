@@ -101,6 +101,25 @@ public sealed record DashboardActivity(
     string Description,
     DateTime CreatedAtUtc);
 
+public sealed record ActivityLogFilter(
+    Guid? MerchantId,
+    string? ActorUserId,
+    string? Action,
+    DateTime? FromUtc,
+    DateTime? ToUtc);
+
+public sealed record ActivityLogItem(
+    Guid Id,
+    Guid? MerchantId,
+    string? MerchantName,
+    string ActorUserId,
+    string Action,
+    string Title,
+    string Description,
+    string EntityType,
+    string? EntityId,
+    DateTime CreatedAtUtc);
+
 public sealed record StoredFile(Stream Stream, string ContentType, string DownloadName);
 
 public sealed record IssuedCredential(

@@ -39,6 +39,7 @@ public static class DependencyInjection
 
         services.AddScoped<IMerchantRepository, MerchantRepository>();
         services.AddScoped<IActivityRepository, ActivityRepository>();
+        services.AddScoped<IActivityService, ActivityService>();
         services.AddScoped<IMerchantService, MerchantService>();
         services.AddScoped<IKycService, KycService>();
         services.AddScoped<ICredentialService, CredentialService>();

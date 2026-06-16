@@ -1,0 +1,105 @@
+@page "/activity"
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = PortalRoles.Admin)]
+@inject IActivityService ActivityService
+@inject IMerchantService MerchantService
+
+<PageTitle>Activity - PayPortal</PageTitle>
+
+<div class="page">
+    <header class="page-header">
+        <div><h1>Activity</h1><p>Filter portal activity by merchant, actor, action, and date range.</p></div>
+        <span class="muted">@items.Count events</span>
+    </header>
+
+    <section class="card filters activity-filters">
+        <select class="input" @bind="merchantId">
+            <option value="">All merchants</option>
+            @foreach (var merchant in merchants)
+            {
+                <option value="@merchant.Id">@merchant.CompanyName</option>
+            }
+        </select>
+        <input class="input" @bind="actor" @bind:event="oninput" placeholder="Actor user id..." />
+        <select class="input" @bind="action">
+            <option value="">All actions</option>
+            @foreach (var value in Actions)
+            {
+                <option value="@value">@Humanize(value)</option>
+            }
+        </select>
+        <InputDate class="input" @bind-Value="fromDate" />
+        <InputDate class="input" @bind-Value="toDate" />
+        <button class="button primary" @onclick="LoadAsync">Apply</button>
+    </section>
+
+    <section class="card flush">
+        <div class="card-title"><h2>Audit Events</h2><span class="muted">Most recent matching events</span></div>
+        <div class="list">
+            @if (items.Count == 0)
+            {
+                <div class="empty-state muted">No activity matches the selected filters.</div>
+            }
+            @foreach (var item in items)
+            {
+                <a class="list-row" href="@ActivityUrl(item)">
+                    <span class="timeline-dot complete"></span>
+                    <span class="list-row-main">
+                        <h3>@item.Title</h3>
+                        <p>@item.Description</p>
+                        <small class="muted">@item.Action | Actor @item.ActorUserId | @item.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy h:mm tt")</small>
+                    </span>
+                </a>
+            }
+        </div>
+    </section>
+</div>
+
+@code {
+    private IReadOnlyList<Merchant> merchants = [];
+    private IReadOnlyList<ActivityLogItem> items = [];
+    private string merchantId = "";
+    private string actor = "";
+    private string action = "";
+    private DateTime? fromDate;
+    private DateTime? toDate;
+    private static readonly string[] Actions =
+    [
+        "document_uploaded",
+        "kyc_document_verified",
+        "kyc_document_rejected",
+        "merchant_profile_updated",
+        "application_ready_for_review",
+        "compliance_review_completed",
+        "application_approved",
+        "application_rejected",
+        "application_moreinformationrequired",
+        "api_credential_issued"
+    ];
+
+    protected override async Task OnInitializedAsync()
+    {
+        merchants = await MerchantService.ListAsync(null, null, null);
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        var filter = new ActivityLogFilter(
+            Guid.TryParse(merchantId, out var parsedMerchantId) ? parsedMerchantId : null,
+            string.IsNullOrWhiteSpace(actor) ? null : actor.Trim(),
+            string.IsNullOrWhiteSpace(action) ? null : action,
+            fromDate?.Date.ToUniversalTime(),
+            toDate?.Date.AddDays(1).AddTicks(-1).ToUniversalTime());
+        items = await ActivityService.ListAsync(filter, 100);
+    }
+
+    private static string ActivityUrl(ActivityLogItem item) =>
+        item.MerchantId.HasValue ? $"/merchants/{item.MerchantId}" : "/activity";
+
+    private static string Humanize(string value)
+    {
+        var text = value.Replace('_', ' ');
+        return char.ToUpperInvariant(text[0]) + text[1..];
+    }
+}

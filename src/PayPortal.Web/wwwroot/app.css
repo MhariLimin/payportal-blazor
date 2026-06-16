@@ -230,6 +230,7 @@ label { display: block; margin: 12px 0 5px; color: var(--text); font-size: 12px;
 .stat-card { min-height: 104px; }
 .chart-card { display: grid; gap: 12px; align-content: start; }
 .chart-row { display: grid; grid-template-columns: 100px 1fr 32px; gap: 10px; align-items: center; font-size: 13px; }
+.chart-row:hover { color: var(--brand-strong); }
 .chart-track { height: 10px; overflow: hidden; background: var(--surface-strong); border-radius: 999px; }
 .chart-track > span { display: block; height: 100%; background: linear-gradient(90deg, var(--brand), var(--accent)); border-radius: inherit; }
 .donut {

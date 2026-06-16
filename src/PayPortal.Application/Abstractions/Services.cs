@@ -20,6 +20,14 @@ public interface IMerchantService
     Task<StoredFile?> OpenLogoAsync(Guid merchantId, CancellationToken cancellationToken = default);
 }
 
+public interface IActivityService
+{
+    Task<IReadOnlyList<ActivityLogItem>> ListAsync(
+        ActivityLogFilter filter,
+        int count = 50,
+        CancellationToken cancellationToken = default);
+}
+
 public interface IKycService
 {
     Task<KycDocument> UploadAsync(Guid merchantId, string type, string fileName, string contentType, long size, Stream stream, CancellationToken cancellationToken = default);
