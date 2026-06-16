@@ -117,14 +117,19 @@ else
                             <span class="requirement-state">@RequirementState(requirement.Type)</span>
                             <span class="list-row-main">
                                 <h3>@requirement.Label</h3>
-                                <p>@(requirement.Required ? "Required" : "Optional") evidence</p>
+                                <p>@RequirementDescription(requirement.Type, requirement.Required)</p>
                                 @if (documents.Count == 0)
                                 {
-                                    <div class="document-slot muted">No file uploaded for this requirement.</div>
+                                    <div class="document-slot muted">
+                                        No file uploaded for this requirement.
+                                        <AuthorizeView Roles="@PortalRoles.Merchant">
+                                            <button class="button secondary" @onclick="() => StartUpload(requirement.Type)">Submit document</button>
+                                        </AuthorizeView>
+                                    </div>
                                 }
                                 @foreach (var document in documents)
                                 {
-                                    <div class="document-upload">
+                                    <div class="document-upload @(document.Status == DocumentStatus.Rejected ? "rejected-document" : "")">
                                         <span class="company-icon">DOC</span>
                                         <span class="list-row-main">
                                             <strong>@document.DocumentName</strong>
@@ -140,6 +145,12 @@ else
                                         </span>
                                         <StatusBadge Value="document.Status" />
                                         <a class="button secondary" href="/kyc-documents/@document.Id/download">View or download</a>
+                                        @if (document.Status == DocumentStatus.Rejected)
+                                        {
+                                            <AuthorizeView Roles="@PortalRoles.Merchant">
+                                                <button class="button primary" @onclick="() => StartUpload(requirement.Type)">Resubmit</button>
+                                            </AuthorizeView>
+                                        }
                                     </div>
                                 }
                             </span>
@@ -227,6 +238,13 @@ else
 
     private void SelectFile(InputFileChangeEventArgs args) => selectedFile = args.File;
 
+    private void StartUpload(string type)
+    {
+        documentType = type;
+        selectedFile = null;
+        showUpload = true;
+    }
+
     private async Task UploadAsync()
     {
         if (selectedFile is null || merchant is null)
@@ -312,6 +330,21 @@ else
             DocumentStatus.Rejected => "Rejected",
             DocumentStatus.Pending => "Pending",
             _ => "Missing"
+        };
+    }
+
+    private string RequirementDescription(string type, bool required)
+    {
+        var latest = merchant!.KycDocuments
+            .Where(x => x.DocumentType == type)
+            .OrderByDescending(x => x.CreatedAtUtc)
+            .FirstOrDefault();
+        return latest?.Status switch
+        {
+            DocumentStatus.Rejected => "Rejected evidence - resubmission required",
+            DocumentStatus.Pending => "Uploaded and waiting for admin review",
+            DocumentStatus.Verified => "Verified by an administrator",
+            _ => required ? "Required evidence" : "Optional evidence"
         };
     }
 

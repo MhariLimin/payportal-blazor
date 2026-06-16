@@ -1,6 +1,6 @@
 @page "/document-requests"
 @rendermode InteractiveServer
-@attribute [Authorize(Roles = PortalRoles.MerchantOrAdmin)]
+@attribute [Authorize(Roles = PortalRoles.Admin)]
 @inject IMerchantService MerchantService
 
 <PageTitle>Document Requests - PayPortal</PageTitle>
@@ -8,27 +8,41 @@
 <div class="page">
     <header class="page-header">
         <div><h1>Document Requests</h1><p>Missing, rejected, and resubmission tasks for KYC evidence.</p></div>
-        <span class="muted">@Tasks.Count tasks</span>
+        <span class="muted">@MerchantGroups.Count merchants</span>
     </header>
 
     <section class="card flush">
         <div class="card-title"><h2>Request Center</h2><span class="muted">Rejected documents become merchant resubmission tasks</span></div>
         <div class="list">
-            @if (Tasks.Count == 0)
+            @if (MerchantGroups.Count == 0)
             {
                 <div class="empty-state muted">No document requests are currently open.</div>
             }
-            @foreach (var task in Tasks)
+            @foreach (var group in MerchantGroups)
             {
-                <a class="list-row" href="@TaskUrl(task)">
-                    <span class="company-icon">DOC</span>
-                    <span class="list-row-main">
-                        <h3>@task.Label</h3>
-                        <p>@task.MerchantName | @task.Description</p>
-                        <small class="muted">@task.State</small>
-                    </span>
-                    <span class="badge @(task.State == "Resubmission needed" ? "rejected" : "pending")">@task.State</span>
-                </a>
+                <details class="request-group" open>
+                    <summary>
+                        <span class="company-icon">DOC</span>
+                        <span class="list-row-main">
+                            <h3>@group.MerchantName</h3>
+                            <p>@group.Tasks.Count missing or rejected document requests</p>
+                        </span>
+                    </summary>
+                    <div class="list">
+                        @foreach (var task in group.Tasks)
+                        {
+                            <a class="list-row" href="@TaskUrl(task)">
+                                <span class="timeline-dot"></span>
+                                <span class="list-row-main">
+                                    <h3>@task.Label</h3>
+                                    <p>@task.Description</p>
+                                    <small class="muted">@task.State</small>
+                                </span>
+                                <span class="badge @(task.State == "Resubmission needed" ? "rejected" : "pending")">@task.State</span>
+                            </a>
+                        }
+                    </div>
+                </details>
             }
         </div>
     </section>
@@ -36,7 +50,10 @@
 
 @code {
     private IReadOnlyList<Merchant> merchants = [];
-    private IReadOnlyList<DocumentTask> Tasks => merchants.SelectMany(BuildTasks).ToList();
+    private IReadOnlyList<MerchantDocumentGroup> MerchantGroups => merchants
+        .Select(x => new MerchantDocumentGroup(x.Id, x.CompanyName, BuildTasks(x).ToList()))
+        .Where(x => x.Tasks.Count > 0)
+        .ToList();
     private readonly (string Type, string Label)[] Requirements =
     [
         ("business_registration", "Certificate of Incorporation"),
@@ -78,5 +95,6 @@
 
     private static string TaskUrl(DocumentTask task) => $"/merchants/{task.MerchantId}/kyc";
 
+    private sealed record MerchantDocumentGroup(Guid MerchantId, string MerchantName, IReadOnlyList<DocumentTask> Tasks);
     private sealed record DocumentTask(Guid MerchantId, string MerchantName, string Label, string Description, string State);
 }
