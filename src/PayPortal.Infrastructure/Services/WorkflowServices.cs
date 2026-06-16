@@ -220,6 +220,9 @@ internal sealed class ReviewService(
         var document = await dbContext.KycDocuments.SingleOrDefaultAsync(
             x => x.Id == documentId, cancellationToken)
             ?? throw new InvalidOperationException("Document not found.");
+        var merchant = await dbContext.Merchants
+            .Include(x => x.KycDocuments)
+            .SingleAsync(x => x.Id == document.MerchantId, cancellationToken);
 
         document.Status = request.Status;
         document.ReviewerNotes = Clean(request.Notes);
@@ -228,6 +231,8 @@ internal sealed class ReviewService(
             : null;
         document.ReviewedAtUtc = DateTime.UtcNow;
         document.ReviewedByUserId = currentUser.UserId;
+        merchant.RiskLevel = CalculateRisk(merchant);
+        merchant.UpdatedAtUtc = DateTime.UtcNow;
 
         dbContext.ActivityEntries.Add(new ActivityEntry
         {
@@ -239,6 +244,44 @@ internal sealed class ReviewService(
             EntityType = nameof(KycDocument),
             EntityId = document.Id.ToString(),
             Details = document.DocumentType
+        });
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task AddAdminNoteAsync(
+        Guid merchantId,
+        string notes,
+        CancellationToken cancellationToken = default)
+    {
+        if (!currentUser.IsAdmin)
+        {
+            throw new UnauthorizedAccessException("Administrator access required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(notes))
+        {
+            throw new InvalidOperationException("Admin note text is required.");
+        }
+
+        _ = await dbContext.Merchants.SingleOrDefaultAsync(
+            x => x.Id == merchantId, cancellationToken)
+            ?? throw new InvalidOperationException("Merchant not found.");
+
+        dbContext.ApplicationReviews.Add(new ApplicationReview
+        {
+            MerchantId = merchantId,
+            ReviewerUserId = currentUser.UserId!,
+            ReviewType = "admin_note",
+            Notes = notes.Trim(),
+            Decision = ReviewDecision.ComplianceReviewed
+        });
+        dbContext.ActivityEntries.Add(new ActivityEntry
+        {
+            MerchantId = merchantId,
+            ActorUserId = currentUser.UserId!,
+            Action = "admin_note_added",
+            EntityType = nameof(ApplicationReview),
+            EntityId = merchantId.ToString()
         });
         await dbContext.SaveChangesAsync(cancellationToken);
     }
@@ -382,4 +425,26 @@ internal sealed class ReviewService(
 
     private static string? Clean(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private static RiskLevel CalculateRisk(Merchant merchant)
+    {
+        var score = 0;
+        if (string.Equals(merchant.BusinessType, "Corporation", StringComparison.OrdinalIgnoreCase))
+        {
+            score += 1;
+        }
+
+        if (string.Equals(merchant.Industry, "Financial Services", StringComparison.OrdinalIgnoreCase))
+        {
+            score += 2;
+        }
+
+        if (string.Equals(merchant.Industry, "Real Estate", StringComparison.OrdinalIgnoreCase))
+        {
+            score += 1;
+        }
+
+        score += merchant.KycDocuments.Count(x => x.Status == DocumentStatus.Rejected) * 2;
+        return score >= 4 ? RiskLevel.High : score >= 2 ? RiskLevel.Medium : RiskLevel.Low;
+    }
 }

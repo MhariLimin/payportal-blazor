@@ -21,6 +21,10 @@
     <section class="card flush">
         <div class="card-title">
             <div><h2>Review Queue</h2><span class="muted">Applications appear here when they are pending or under compliance review.</span></div>
+            <div class="header-actions">
+                <button class="button secondary" disabled="@(selectedMerchants.Count == 0)" @onclick="ExportSelected">Export selected</button>
+                <button class="button secondary" disabled="@(selectedMerchants.Count == 0)" @onclick="ClearSelection">Clear selection</button>
+            </div>
         </div>
         <div class="list">
             @if (Pending.Count == 0)
@@ -30,6 +34,7 @@
             @foreach (var merchant in Pending)
             {
                 <div class="application-row">
+                    <input type="checkbox" checked="@selectedMerchants.Contains(merchant.Id)" @onchange="args => ToggleMerchant(merchant.Id, args)" />
                     @if (!string.IsNullOrWhiteSpace(merchant.LogoStorageName))
                     {
                         <img class="company-logo" src="/merchant-logos/@merchant.Id" alt="" />
@@ -90,6 +95,7 @@
                             @if (document is not null)
                             {
                                 <StatusBadge Value="document.Status" />
+                                <span class="badge approved">Scan Passed</span>
                                 <a class="button secondary" href="/kyc-documents/@document.Id/download">View or download</a>
                                 <button class="button secondary" disabled="@submitting" @onclick="() => ReviewDocumentAsync(document.Id, DocumentStatus.Verified)">Verify</button>
                                 <button class="button danger" disabled="@submitting" @onclick="() => ReviewDocumentAsync(document.Id, DocumentStatus.Rejected)">Reject</button>
@@ -98,10 +104,23 @@
                     }
                 </div>
 
-                @if (selected.Reviews.Count > 0)
+                @if (selected.Reviews.Any(x => x.ReviewType == "admin_note"))
+                {
+                    <h3>Internal Admin Notes</h3>
+                    @foreach (var note in selected.Reviews.Where(x => x.ReviewType == "admin_note").OrderByDescending(x => x.CreatedAtUtc))
+                    {
+                        <div class="review-history">
+                            <strong>Internal Note</strong>
+                            <span>@note.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy h:mm tt")</span>
+                            <p>@note.Notes</p>
+                        </div>
+                    }
+                }
+
+                @if (selected.Reviews.Any(x => x.ReviewType != "admin_note"))
                 {
                     <h3>Review History</h3>
-                    @foreach (var review in selected.Reviews.OrderByDescending(x => x.CreatedAtUtc))
+                    @foreach (var review in selected.Reviews.Where(x => x.ReviewType != "admin_note").OrderByDescending(x => x.CreatedAtUtc))
                     {
                         <div class="review-history">
                             <strong>@FormatDecision(review.Decision)</strong>
@@ -122,6 +141,7 @@
                 </div>
                 <label>Reviewer notes</label>
                 <textarea class="input" rows="4" @bind="notes" placeholder="Explain the decision or documents required..."></textarea>
+                <button class="button secondary" disabled="@submitting" @onclick="SaveAdminNoteAsync">Save as Internal Admin Note</button>
             </div>
             <div class="modal-actions">
                 <button class="button secondary" @onclick="Close">Cancel</button>
@@ -141,6 +161,7 @@
     private string? message;
     private bool success;
     private bool submitting;
+    private readonly HashSet<Guid> selectedMerchants = [];
     private readonly (string Type, string Label)[] Requirements =
     [
         ("business_registration", "Certificate of Incorporation"),
@@ -168,6 +189,34 @@
     }
 
     private void Close() => selected = null;
+
+    private void ToggleMerchant(Guid merchantId, ChangeEventArgs args)
+    {
+        if (args.Value is true)
+        {
+            selectedMerchants.Add(merchantId);
+        }
+        else
+        {
+            selectedMerchants.Remove(merchantId);
+        }
+    }
+
+    private void ClearSelection()
+    {
+        selectedMerchants.Clear();
+        message = null;
+    }
+
+    private void ExportSelected()
+    {
+        var selectedNames = merchants
+            .Where(x => selectedMerchants.Contains(x.Id))
+            .Select(x => x.CompanyName)
+            .ToList();
+        success = true;
+        message = $"Prepared export for {selectedNames.Count} selected applications: {string.Join(", ", selectedNames)}.";
+    }
 
     private async Task SubmitAsync()
     {
@@ -215,6 +264,37 @@
             message = $"Compliance review completed for {selected.CompanyName}.";
             await RefreshAsync();
             selected = merchants.SingleOrDefault(x => x.Id == selected.Id);
+        }
+        catch (Exception exception) when (exception is InvalidOperationException or UnauthorizedAccessException)
+        {
+            success = false;
+            message = exception.Message;
+        }
+        finally
+        {
+            submitting = false;
+        }
+    }
+
+    private async Task SaveAdminNoteAsync()
+    {
+        if (selected is null || string.IsNullOrWhiteSpace(notes))
+        {
+            success = false;
+            message = "Admin note text is required.";
+            return;
+        }
+
+        submitting = true;
+        try
+        {
+            await ReviewService.AddAdminNoteAsync(selected.Id, notes);
+            success = true;
+            message = "Internal admin note saved.";
+            var selectedId = selected.Id;
+            notes = "";
+            await RefreshAsync();
+            selected = merchants.SingleOrDefault(x => x.Id == selectedId);
         }
         catch (Exception exception) when (exception is InvalidOperationException or UnauthorizedAccessException)
         {

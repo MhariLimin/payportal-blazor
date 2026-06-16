@@ -43,6 +43,7 @@ public interface ICredentialService
 public interface IReviewService
 {
     Task ReviewAsync(Guid merchantId, ReviewRequest request, CancellationToken cancellationToken = default);
+    Task AddAdminNoteAsync(Guid merchantId, string notes, CancellationToken cancellationToken = default);
     Task CompleteComplianceReviewAsync(Guid merchantId, string notes, CancellationToken cancellationToken = default);
     Task ReviewDocumentAsync(Guid documentId, DocumentReviewRequest request, CancellationToken cancellationToken = default);
 }

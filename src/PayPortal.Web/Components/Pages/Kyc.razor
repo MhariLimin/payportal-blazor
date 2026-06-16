@@ -149,12 +149,12 @@ else
             </article>
         </section>
 
-        @if (merchant.Reviews.Count > 0)
+        @if (merchant.Reviews.Any(x => x.ReviewType != "admin_note"))
         {
             <section class="card">
                 <h2>Reviewer Notes and Approval Timeline</h2>
                 <div class="timeline">
-                    @foreach (var review in merchant.Reviews.OrderByDescending(x => x.CreatedAtUtc))
+                    @foreach (var review in merchant.Reviews.Where(x => x.ReviewType != "admin_note").OrderByDescending(x => x.CreatedAtUtc))
                     {
                         <div class="timeline-item">
                             <span class="timeline-dot @(review.Decision == ReviewDecision.Approved ? "complete" : "")"></span>

@@ -98,6 +98,9 @@ internal sealed class ActivityService(
             "api_credential_issued" => (
                 "API credential issued",
                 $"{subject} generated a new API credential."),
+            "admin_note_added" => (
+                "Internal admin note added",
+                $"An administrator added an internal note for {subject}."),
             _ => (Humanize(activity.Action), $"{subject}: {Humanize(activity.Details ?? activity.Action)}.")
         };
 

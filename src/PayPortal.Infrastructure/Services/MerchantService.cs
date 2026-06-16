@@ -120,6 +120,7 @@ internal sealed class MerchantService(
         merchant.FoundedYear = model.FoundedYear;
         merchant.EmployeeCount = model.EmployeeCount;
         merchant.AnnualRevenueRange = Clean(model.AnnualRevenueRange);
+        merchant.RiskLevel = CalculateRisk(merchant);
         merchant.UpdatedAtUtc = DateTime.UtcNow;
 
         contact.Name = model.ContactName.Trim();
@@ -273,6 +274,28 @@ internal sealed class MerchantService(
 
     private static string? Clean(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private static RiskLevel CalculateRisk(Merchant merchant)
+    {
+        var score = 0;
+        if (string.Equals(merchant.BusinessType, "Corporation", StringComparison.OrdinalIgnoreCase))
+        {
+            score += 1;
+        }
+
+        if (string.Equals(merchant.Industry, "Financial Services", StringComparison.OrdinalIgnoreCase))
+        {
+            score += 2;
+        }
+
+        if (string.Equals(merchant.Industry, "Real Estate", StringComparison.OrdinalIgnoreCase))
+        {
+            score += 1;
+        }
+
+        score += merchant.KycDocuments.Count(x => x.Status == DocumentStatus.Rejected) * 2;
+        return score >= 4 ? RiskLevel.High : score >= 2 ? RiskLevel.Medium : RiskLevel.Low;
+    }
 
     private async Task SynchronizeDocumentMilestoneAsync(
         Merchant? merchant,
