@@ -85,7 +85,8 @@ h1, h2, h3, strong { font-family: var(--font-heading); }
 .workspace-context { display: flex; align-items: center; gap: 10px; padding-left: 20px; border-left: 1px solid var(--border); }
 .context-label { font-weight: 700; }
 .context-status { padding: 5px 10px; color: var(--success); background: color-mix(in srgb, var(--success) 12%, transparent); border-radius: 999px; font-size: 12px; font-weight: 700; }
-.user-menu-wrap { position: relative; margin-left: auto; }
+.account-actions { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+.user-menu-wrap { position: relative; }
 .topbar-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
 .topbar-actions + .notification-wrap, .topbar-actions + .user-menu-wrap, .notification-wrap + .user-menu-wrap { margin-left: 0; }
 .user-summary { display: flex; align-items: center; gap: 10px; padding: 6px 8px; color: var(--text); background: transparent; border: 0; border-radius: 12px; cursor: pointer; }
@@ -116,7 +117,7 @@ h1, h2, h3, strong { font-family: var(--font-heading); }
 .user-dropdown .logout-action { margin-top: 4px; color: var(--danger); border-top: 1px solid var(--border); border-radius: 0 0 8px 8px; }
 .dropdown-section { display: grid; gap: 3px; margin-top: 6px; padding-top: 7px; border-top: 1px solid var(--border); }
 .dropdown-section > span { padding: 0 11px; color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
-.notification-wrap { position: relative; margin-left: auto; }
+.notification-wrap { position: relative; }
 .notification-button {
     position: relative; display: grid; place-items: center; width: 38px; height: 38px;
     color: var(--brand-strong); background: var(--surface); border: 1px solid var(--border);
@@ -137,15 +138,14 @@ h1, h2, h3, strong { font-family: var(--font-heading); }
 }
 .sidebar-label { padding: 0 12px 10px; color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
 .nav-menu { display: grid; gap: 6px; }
-.nav-menu a, .nav-group summary { display: flex; gap: 9px; align-items: center; padding: 8px 9px; color: var(--muted); font-size: 12px; font-weight: 700; border-radius: 9px; }
-.nav-menu a:hover, .nav-group summary:hover { color: var(--text); background: var(--surface-soft); }
+.nav-menu a, .nav-group button { display: flex; gap: 9px; align-items: center; padding: 8px 9px; color: var(--muted); font-size: 12px; font-weight: 700; border-radius: 9px; }
+.nav-menu a:hover, .nav-group button:hover { color: var(--text); background: var(--surface-soft); }
 .nav-menu a.active { color: var(--brand-strong); background: color-mix(in srgb, var(--brand) 12%, var(--surface)); }
 .nav-icon { display: grid; place-items: center; width: 27px; height: 27px; border-radius: 8px; color: inherit; background: color-mix(in srgb, currentColor 10%, transparent); font-size: 11px; }
 .nav-group { display: grid; gap: 4px; }
-.nav-group summary { cursor: pointer; list-style: none; }
-.nav-group summary::-webkit-details-marker { display: none; }
-.nav-group summary::after { content: "v"; margin-left: auto; color: var(--muted); font-size: 10px; }
-.nav-group[open] summary::after { content: "^"; }
+.nav-group button { width: 100%; border: 0; background: transparent; cursor: pointer; text-align: left; }
+.nav-group button::after { content: "v"; margin-left: auto; color: var(--muted); font-size: 10px; }
+.nav-group.open button::after { content: "^"; }
 .nav-group a { margin-left: 17px; padding-left: 8px; }
 .sidebar-card { display: grid; gap: 7px; margin-top: auto; padding: 15px; color: #d8f5ff; background: linear-gradient(145deg, #092746, #075d83); border-radius: 13px; }
 .sidebar-card span { color: #a9cedd; font-size: 12px; }

@@ -10,12 +10,14 @@
             <span class="context-label">Merchant operations</span>
             <span class="context-status">Secure workspace</span>
         </div>
-        <AuthorizeView Roles="@PortalRoles.Merchant">
-            <Authorized>
-                <NotificationBell />
-            </Authorized>
-        </AuthorizeView>
-        <UserMenu />
+        <div class="account-actions">
+            <AuthorizeView Roles="@PortalRoles.Merchant">
+                <Authorized>
+                    <NotificationBell />
+                </Authorized>
+            </AuthorizeView>
+            <UserMenu />
+        </div>
     </header>
     <aside class="sidebar">
         <div class="sidebar-label">Workspace</div>
